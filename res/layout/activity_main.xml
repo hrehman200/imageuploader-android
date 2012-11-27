@@ -71,30 +71,27 @@
             android:verticalSpacing="2dp" >
         </GridView>
 
-        <RelativeLayout
-            android:id="@+id/rlFullImage"
+        <FrameLayout
+            android:id="@+id/flFullImage"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:visibility="invisible" >
 
-            <ImageView
-                android:id="@+id/imgCloseFullImage"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/delete"
-                android:layout_alignParentLeft="true"
-                android:layout_alignParentTop="true"
-                android:layout_margin="5dp"
-                android:layout_above="@+id/imgFullImage" >
-            </ImageView>
-            
             <ImageView
                 android:id="@+id/imgFullImage"
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent" >
             </ImageView>
             
-        </RelativeLayout>
+            <ImageView
+                android:id="@+id/imgCloseFullImage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/delete"
+                android:layout_margin="5dp">
+            </ImageView>
+            
+        </FrameLayout>
     </FrameLayout>
 
 </RelativeLayout>

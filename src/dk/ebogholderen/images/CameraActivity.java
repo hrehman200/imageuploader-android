@@ -27,6 +27,7 @@ import android.view.SurfaceHolder.Callback;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 public class CameraActivity extends Activity implements OnClickListener, Callback, Camera.PictureCallback, Camera.ErrorCallback {
@@ -34,6 +35,7 @@ public class CameraActivity extends Activity implements OnClickListener, Callbac
 	SurfaceView cameraView;
 	SurfaceHolder surfaceHolder;
 	Camera camera;
+	ImageView imgCamera;
 	// -------------------
 	public static File pathToSave = null;
 	boolean takingPictures = true;
@@ -45,6 +47,9 @@ public class CameraActivity extends Activity implements OnClickListener, Callbac
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_camera);
+		//
+		imgCamera = (ImageView)findViewById(R.id.imgCamera);
+		imgCamera.setOnClickListener(this);
 		//
 		pathToSave = new File(SAVE_PATH);
 		if (!pathToSave.exists())
@@ -191,7 +196,7 @@ public class CameraActivity extends Activity implements OnClickListener, Callbac
 	/******************************************************************************************************************/
 	public void onClick(View v) {
 		switch (v.getId()) {
-			case R.id.cameraView:
+			case R.id.imgCamera:
 				camera.takePicture(null, null, null, CameraActivity.this);
 			break;
 		}

@@ -16,6 +16,7 @@ import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.GridView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -28,7 +29,7 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 	Uri imgUri;
 	int selectedPosition;
 	ImageAdapter imgAdapter;
-	RelativeLayout rlFullImage;
+	FrameLayout rlFullImage;
 	ImageView imgFullImage, imgCloseFullImage;
 	final static String APP_NAME = "ImageUploader";
 	final static int CAMERA_RESULT = 0;
@@ -56,7 +57,7 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 		gridView.setAdapter(imgAdapter);
 		gridView.setOnItemClickListener(this);
 		//
-		rlFullImage = (RelativeLayout) findViewById(R.id.rlFullImage);
+		rlFullImage = (FrameLayout) findViewById(R.id.flFullImage);
 		imgFullImage = (ImageView) findViewById(R.id.imgFullImage);
 		imgCloseFullImage = (ImageView) findViewById(R.id.imgCloseFullImage);
 		imgCloseFullImage.setOnClickListener(this);
@@ -120,7 +121,7 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 			// UploaderTask task = new UploaderTask(MainActivity.this, imgUri);
 			Log.v("---", imgUri.toString());
 			UploaderTask task = new UploaderTask(MainActivity.this, gridItem);
-			//task.execute();
+			task.execute();
 		}
 	}
 
