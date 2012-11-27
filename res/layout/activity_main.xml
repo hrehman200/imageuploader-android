@@ -46,16 +46,55 @@
             android:layout_centerVertical="true"
             android:layout_toRightOf="@+id/imgCamera"
             android:text="Galleri" />
-
     </RelativeLayout>
 
-    <GridView
-        android:id="@+id/gridImages"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+    <FrameLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
         android:layout_alignParentLeft="true"
-        android:layout_below="@+id/relativeLayout1"
-        android:numColumns="3" >
-    </GridView>
+        android:layout_below="@+id/relativeLayout1" >
+
+        <GridView
+            android:id="@+id/gridImages"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:alwaysDrawnWithCache="true"
+            android:clipChildren="true"
+            android:columnWidth="100dp"
+            android:gravity="center_horizontal"
+            android:horizontalSpacing="2dp"
+            android:numColumns="auto_fit"
+            android:padding="0dp"
+            android:scrollingCache="true"
+            android:smoothScrollbar="true"
+            android:stretchMode="columnWidth"
+            android:verticalSpacing="2dp" >
+        </GridView>
+
+        <RelativeLayout
+            android:id="@+id/rlFullImage"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:visibility="invisible" >
+
+            <ImageView
+                android:id="@+id/imgCloseFullImage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/delete"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentTop="true"
+                android:layout_margin="5dp"
+                android:layout_above="@+id/imgFullImage" >
+            </ImageView>
+            
+            <ImageView
+                android:id="@+id/imgFullImage"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent" >
+            </ImageView>
+            
+        </RelativeLayout>
+    </FrameLayout>
 
 </RelativeLayout>

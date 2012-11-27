@@ -14,17 +14,19 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.util.Log;
+import android.widget.ProgressBar;
 import dk.ebogholderen.images.CustomMultipartEntity.ProgressListener;
 
 class UploaderTask extends AsyncTask<Void, Integer, Void> {
 	ProgressDialog pd;
 	long totalSize;
 	Context ctx;
-	Uri uriImage;
+	GridItem gridItem;
 
-	public UploaderTask(Context ctx, Uri uriImage) {
+	public UploaderTask(Context ctx, GridItem gridItem) {
 		this.ctx = ctx;
-		this.uriImage = uriImage;
+		this.gridItem = gridItem;
 	}
 
 	@Override
@@ -33,7 +35,7 @@ class UploaderTask extends AsyncTask<Void, Integer, Void> {
 		pd.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
 		pd.setMessage("Uploading Picture...");
 		pd.setCancelable(false);
-		pd.show();
+		//pd.show();
 	}
 
 	@Override
@@ -48,8 +50,14 @@ class UploaderTask extends AsyncTask<Void, Integer, Void> {
 					publishProgress((int) ((num / (float) totalSize) * 100));
 				}
 			});
+			File image = null;
+			if(gridItem.imgUri.isAbsolute())
+				image = new File(Utility.getRealPathFromURI(ctx, gridItem.imgUri));
+			else
+				image = new File(gridItem.imgUri.toString());
 			// We use FileBody to transfer an image
-			multipartContent.addPart("imageFile", new FileBody(new File(new URI(uriImage.toString()))));
+			multipartContent.addPart("imageFile", new FileBody(image));
+			//multipartContent.addPart("imageFile", new FileBody(new File(this.imgPath)));
 			totalSize = multipartContent.getContentLength();
 			// Send it
 			httpPost.setEntity(multipartContent);
@@ -66,7 +74,11 @@ class UploaderTask extends AsyncTask<Void, Integer, Void> {
 
 	@Override
 	protected void onProgressUpdate(Integer... progress) {
-		pd.setProgress((int) (progress[0]));
+		//pd.setProgress((int) (progress[0]));
+		ProgressBar pb = gridItem.pb;
+		if(pb != null)
+			pb.setProgress((int) (progress[0]));
+		Log.v("---", progress[0]+"...");
 	}
 
 	@Override
