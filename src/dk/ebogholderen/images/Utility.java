@@ -4,15 +4,19 @@ import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URI;
-import java.net.URISyntaxException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import android.content.Context;
 import android.database.Cursor;
@@ -241,12 +245,26 @@ public class Utility {
 		cursor.moveToFirst();
 		return cursor.getString(column_index);
 	}
+	
+	/*****************************************************************************************************/
+	/**
+	 * @param picUri
+	 * @return
+	 */
+	public static File uriToFile(Context ctx, Uri picUri) {
+		File image;
+		if (picUri.isAbsolute())
+			image = new File(Utility.getRealPathFromURI(ctx, picUri));
+		else
+			image = new File(picUri.toString());
+		return image;
+	}
 
 	/*****************************************************************************************************/
 	public static Bitmap getPreview(Context ctx, Uri imgUri) {
 		int THUMBNAIL_SIZE = 100;
 		File image = null;
-		if(imgUri.isAbsolute())
+		if (imgUri.isAbsolute())
 			image = new File(Utility.getRealPathFromURI(ctx, imgUri));
 		else
 			image = new File(imgUri.toString());
@@ -260,5 +278,55 @@ public class Utility {
 		BitmapFactory.Options opts = new BitmapFactory.Options();
 		opts.inSampleSize = originalSize / THUMBNAIL_SIZE;
 		return BitmapFactory.decodeFile(image.getPath(), opts);
+	}
+
+	/*****************************************************************************************************/
+	public static void serializeData(String filepath, String filename, String json) {
+		FileOutputStream fos;
+		try {
+			File f = new File(filepath);
+			if(!f.exists())
+				f.mkdirs();
+			f = new File(filepath, filename);
+			if(!f.exists())
+				f.createNewFile();
+			fos = new FileOutputStream(f);
+			ObjectOutputStream oos = new ObjectOutputStream(fos);
+			oos.writeObject(json);
+			oos.close();
+		}
+		catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/*****************************************************************************************************/
+	@SuppressWarnings("unchecked")
+	public static String deserializeData(String filepath, String filename) {
+		String s = "";
+		try {
+			File f = new File(filepath);
+			if(!f.exists())
+				f.mkdirs();
+			f = new File(filepath, filename);
+			if(!f.exists())
+				f.createNewFile();
+			FileInputStream fis = new FileInputStream(f);
+			ObjectInputStream ois = new ObjectInputStream(fis);
+			s = (String) ois.readObject();
+		}
+		catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+		catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+		return s;
 	}
 }

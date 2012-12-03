@@ -44,55 +44,51 @@
             android:layout_alignParentBottom="true"
             android:layout_alignParentLeft="true"
             android:background="#000000"
+            android:gravity="center"
             android:padding="5dp" >
 
             <Button
-                android:id="@+id/button1"
+                android:id="@+id/btnIncomeInBank"
                 style="?android:attr/buttonStyleSmall"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Button" />
+                android:layout_alignBottom="@string/incomeShownInBank"
+                android:lines="2"
+                android:text="@string/incomeShownInBank"
+                android:textSize="10dp" />
 
             <Button
-                android:id="@+id/Button01"
+                android:id="@+id/btnSpendingCash"
                 style="?android:attr/buttonStyleSmall"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentLeft="true"
-                android:layout_centerVertical="true"
-                android:layout_marginLeft="66dp"
-                android:text="Button" />
+                android:layout_alignBaseline="@+id/btnIncomeInBank"
+                android:layout_alignBottom="@+id/btnIncomeInBank"
+                android:layout_toRightOf="@+id/btnIncomeInBank"
+                android:text="@string/spendingCash"
+                android:textSize="10dp" />
 
             <Button
-                android:id="@+id/Button02"
+                android:id="@+id/btnExpenseInBank"
                 style="?android:attr/buttonStyleSmall"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignBaseline="@+id/button1"
-                android:layout_alignBottom="@+id/button1"
-                android:layout_centerHorizontal="true"
-                android:text="Button" />
+                android:layout_alignBaseline="@+id/btnSpendingCash"
+                android:layout_alignBottom="@+id/btnSpendingCash"
+                android:layout_toRightOf="@+id/btnSpendingCash"
+                android:text="@string/expenseShownInBank"
+                android:textSize="10dp" />
 
             <Button
-                android:id="@+id/Button03"
+                android:id="@+id/btnOther"
                 style="?android:attr/buttonStyleSmall"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignBaseline="@+id/Button01"
-                android:layout_alignBottom="@+id/Button01"
-                android:layout_centerHorizontal="true"
-                android:text="Button" />
-
-            <Button
-                android:id="@+id/Button04"
-                style="?android:attr/buttonStyleSmall"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignBaseline="@+id/Button02"
-                android:layout_alignBottom="@+id/Button02"
-                android:layout_marginLeft="14dp"
-                android:layout_toRightOf="@+id/Button02"
-                android:text="Button" />
+                android:layout_alignTop="@+id/btnExpenseInBank"
+                android:layout_toRightOf="@+id/btnExpenseInBank"
+                android:lines="2"
+                android:text="@string/other"
+                android:textSize="10dp" />
 
         </RelativeLayout>
 

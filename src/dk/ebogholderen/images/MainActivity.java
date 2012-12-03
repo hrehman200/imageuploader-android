@@ -1,13 +1,19 @@
 package dk.ebogholderen.images;
 
 import java.io.File;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Date;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore.Images;
+import android.telephony.TelephonyManager;
 import android.text.Html;
 import android.util.Log;
 import android.view.Menu;
@@ -20,27 +26,47 @@ import android.widget.FrameLayout;
 import android.widget.GridView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
+import android.widget.ProgressBar;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
+import com.google.gson.reflect.TypeToken;
 
 public class MainActivity extends Activity implements OnClickListener, OnItemClickListener {
 	Button btnGallery, btnEmail;
 	ImageButton btnCamera;
 	GridView gridView;
-	Uri imgUri;
 	int selectedPosition;
 	ImageAdapter imgAdapter;
 	FrameLayout rlFullImage;
 	ImageView imgFullImage, imgCloseFullImage;
-	final static String APP_NAME = "ImageUploader";
-	final static int CAMERA_RESULT = 0;
-	final static int GALLERY_RESULT = 1;
-	final static int REVIEW_REQUEST = 2;
-	final static int REVIEW_RESULT = 3;
+	ArrayList<UploaderTask> arrUploadTasks;
+	boolean isResuming = true;
+	//
+	static final String APP_NAME = "ImageUploader";
+	static final String SAVE_PATH = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/dk.ebogholderen.images/files/";
+	static final int CAMERA_RESULT = 0;
+	static final int GALLERY_RESULT = 1;
+	static final int REVIEW_REQUEST = 2;
+	static final int REVIEW_RESULT = 3;
+	static final String UPLOAD_LIST_FILE = "uploadlist.txt";
+	static String DEVICE_ID = "";
+	static final String SERVER_URL = "http://images.ebogholderen.dk/PicUploader/ImageUploader.php?devicetoken=%s&imagetype=%s";
+	
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+		//
+		TelephonyManager tm = (TelephonyManager) MainActivity.this.getSystemService(Context.TELEPHONY_SERVICE);
+		DEVICE_ID = tm.getDeviceId();
 		//
 		btnCamera = (ImageButton) findViewById(R.id.imgCamera);
 		btnCamera.setOnClickListener(this);
@@ -61,12 +87,13 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 		imgFullImage = (ImageView) findViewById(R.id.imgFullImage);
 		imgCloseFullImage = (ImageView) findViewById(R.id.imgCloseFullImage);
 		imgCloseFullImage.setOnClickListener(this);
+		//
+		arrUploadTasks = new ArrayList<UploaderTask>();
 	}
 
 	/********************************************************************************************************/
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		getMenuInflater().inflate(R.menu.activity_main, menu);
 		return true;
 	}
 
@@ -89,7 +116,7 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 			break;
 			case R.id.imgCloseFullImage:
 				hideFullImage();
-				break;
+			break;
 		}
 	}
 
@@ -99,29 +126,67 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 		if (resultCode == RESULT_OK) {
 			switch (requestCode) {
 				case GALLERY_RESULT:
-					imgUri = intent.getData();
-					reviewImage();
+					Uri imgUri = intent.getData();
+					reviewImage(imgUri);
 				// addImageToGrid();
 				break;
 				case REVIEW_REQUEST:
-					imgUri = Uri.parse((String) intent.getExtras().get("img"));
-					addImageToGrid(true);
+					Uri imgUri2 = Uri.parse((String) intent.getExtras().get("img"));
+					String category = (String) intent.getExtras().getString("category");
+					addImageToGrid(imgUri2, category);
+					isResuming = false;
 				break;
 			}
 		}
 	}
 
 	/********************************************************************************************************/
-	private void addImageToGrid(boolean fromCameraActivity) {
+	@Override
+	protected void onResume() {
+		super.onResume();
+		if (isResuming) {
+			Gson gson = new GsonBuilder().registerTypeAdapter(Uri.class, new UriSerializer()).registerTypeAdapter(Uri.class, new UriDeserializer()).create();
+			String jsonData = Utility.deserializeData(MainActivity.SAVE_PATH, UPLOAD_LIST_FILE);
+			Type t = new TypeToken<ArrayList<GridItem>>() {}.getType();
+			ArrayList<GridItem> arr = gson.fromJson(jsonData, t);
+			if (arr != null && arr.size() > 0) {
+				ImageAdapter.arrImages = arr;
+				imgAdapter.notifyDataSetChanged();
+				arrUploadTasks = new ArrayList<UploaderTask>();
+				for (GridItem gi : ImageAdapter.arrImages) {
+					UploaderTask task = new UploaderTask(MainActivity.this, gi);
+					if (!gi.isUploaded) {
+						task.execute();
+					}
+					// add the scheduled task to array so that later we stop/restart this task
+					arrUploadTasks.add(task);
+				}
+			}
+		}
+	}
+
+	/********************************************************************************************************/
+	@Override
+	protected void onPause() {
+		super.onPause();
+		Gson gson = new GsonBuilder().registerTypeAdapter(Uri.class, new UriSerializer()).registerTypeAdapter(Uri.class, new UriDeserializer()).create();
+		String jsonData = gson.toJson(ImageAdapter.arrImages);
+		Utility.serializeData(MainActivity.SAVE_PATH, UPLOAD_LIST_FILE, jsonData);
+	}
+
+	/********************************************************************************************************/
+	private void addImageToGrid(Uri imgUri, String category) {
 		GridItem gridItem = new GridItem();
 		gridItem.imgUri = imgUri;
+		gridItem.category = category;
 		if (!ImageAdapter.arrImages.contains(gridItem)) {
 			ImageAdapter.arrImages.add(gridItem);
 			imgAdapter.notifyDataSetChanged();
-			// UploaderTask task = new UploaderTask(MainActivity.this, imgUri);
 			Log.v("---", imgUri.toString());
 			UploaderTask task = new UploaderTask(MainActivity.this, gridItem);
 			task.execute();
+			// add the scheduled task to array so that later we stop/restart this task
+			arrUploadTasks.add(task);
 		}
 	}
 
@@ -135,8 +200,8 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 		return uriSavedImage;
 	}
 
-	/********************************************************************************************************/
-	private void reviewImage() {
+	/*******************************************************************************************************/
+	private void reviewImage(Uri imgUri) {
 		Intent i = new Intent(MainActivity.this, ImageReviewActivity.class);
 		i.putExtra("img", imgUri.toString());
 		startActivityForResult(i, REVIEW_REQUEST);
@@ -148,12 +213,12 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 		emailIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 		// emailIntent.setType("vnd.android.cursor.item/email");
 		emailIntent.setType("text/html");
-		emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, new String[] { "" });
-		emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "A picture I want to share.");
-		emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, Html.fromHtml("<b>Title: </b><br/>Nice picture I took from my Android device.<br/><br/>" + "<b>Description: </b><br/>Here is a nice picture I took with my Android device via ImageUploader App."));
+		emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, new String[] { "hrehman200@gmail.com" });
+		emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "");
+		emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, "");
 		emailIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-		emailIntent.setType("image/jpeg");
-		emailIntent.putExtra(android.content.Intent.EXTRA_STREAM, picUri);
+		File image = Utility.uriToFile(MainActivity.this, picUri);
+		emailIntent.putExtra(android.content.Intent.EXTRA_STREAM, Uri.fromFile(image));
 		startActivity(Intent.createChooser(emailIntent, "Send mail using..."));
 	}
 
@@ -164,36 +229,44 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 		GridItem gi = ImageAdapter.arrImages.get(position);
 		showFullImage(gi.imgUri);
 	}
-	
+
 	/********************************************************************************************************/
 	public void handleImgSelect(View v) {
 		selectedPosition = (Integer) v.getTag();
-		deselectAllImagesInGrid();
+		deselectAllImagesInGrid(selectedPosition);
 		View parentView = (View) v.getParent();
-		if(parentView.getBackground() == null) {
+		Log.v("parentView", parentView.toString());
+		if (parentView.getBackground() == null) {
 			parentView.setBackgroundResource(R.drawable.griditem_border);
 			btnEmail.setEnabled(true);
+			//
+			UploaderTask t = arrUploadTasks.get(selectedPosition);
+			t = new UploaderTask(MainActivity.this, t.gridItem);
+			t.execute();
 		}
 		else {
 			parentView.setBackgroundDrawable(null);
 			btnEmail.setEnabled(false);
 		}
 	}
-	
+
 	/********************************************************************************************************/
 	public void handleImgDelete(View v) {
-		Log.v("---", v.getTag().toString());
+		int position = (Integer) v.getTag();
+		askWheterToDeleteImage(position);
 	}
-	
+
 	/********************************************************************************************************/
-	private void deselectAllImagesInGrid() {
-		for(int i=0; i<gridView.getAdapter().getCount(); i++) {
+	private void deselectAllImagesInGrid(int except) {
+		for (int i = 0; i < gridView.getAdapter().getCount(); i++) {
+			if(i == except)
+				continue;
 			GridItem gi = (GridItem) gridView.getItemAtPosition(i);
 			View parentView = (View) gi.pb.getParent();
 			parentView.setBackgroundDrawable(null);
 		}
 	}
-	
+
 	/********************************************************************************************************/
 	private void showFullImage(Uri uri) {
 		gridView.setVisibility(View.INVISIBLE);
@@ -201,10 +274,56 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 		imgFullImage.setImageURI(uri);
 		btnEmail.setEnabled(true);
 	}
-	
+
 	/********************************************************************************************************/
 	private void hideFullImage() {
 		gridView.setVisibility(View.VISIBLE);
 		rlFullImage.setVisibility(View.INVISIBLE);
+	}
+
+	/*******************************************************************************************************/
+	private void askWheterToDeleteImage(final int position) {
+		AlertDialog.Builder alert = new AlertDialog.Builder(this);
+		alert.setTitle(R.string.confirm);
+		alert.setMessage(R.string.confirmDeleteImg);
+		alert.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int whichButton) {
+				UploaderTask t = arrUploadTasks.get(position);
+				t.cancel(true);
+				arrUploadTasks.remove(position);
+				//
+				GridItem gi = ImageAdapter.arrImages.get(position);
+				File f = Utility.uriToFile(MainActivity.this, gi.imgUri);
+				f.delete();
+				//
+				ImageAdapter.arrImages.remove(position);
+				imgAdapter.notifyDataSetChanged();
+			}
+		});
+		alert.setNegativeButton(R.string.photo_archive, new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int whichButton) {
+				UploaderTask t = arrUploadTasks.get(position);
+				t.cancel(true);
+				arrUploadTasks.remove(position);
+				//
+				ImageAdapter.arrImages.remove(position);
+				imgAdapter.notifyDataSetChanged();
+			}
+		});
+		alert.show();
+	}
+
+	/*******************************************************************************************************/
+	private class UriDeserializer implements JsonDeserializer<Uri> {
+		@Override
+		public Uri deserialize(final JsonElement src, final Type srcType, final JsonDeserializationContext context) throws JsonParseException {
+			return Uri.parse(src.getAsString());
+		}
+	}
+
+	private class UriSerializer implements JsonSerializer<Uri> {
+		public JsonElement serialize(Uri src, Type typeOfSrc, JsonSerializationContext context) {
+			return new JsonPrimitive(src.toString());
+		}
 	}
 }

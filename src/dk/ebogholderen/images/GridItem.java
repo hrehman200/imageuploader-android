@@ -5,5 +5,7 @@ import android.widget.ProgressBar;
 
 public class GridItem {
 	public Uri imgUri;
-	public ProgressBar pb;
+	public String category;
+	public boolean isUploaded;
+	transient public ProgressBar pb;
 }

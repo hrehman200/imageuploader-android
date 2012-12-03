@@ -1,8 +1,17 @@
 <resources>
 
     <string name="app_name">ImageUploader</string>
-    <string name="hello_world">Hello world!</string>
-    <string name="menu_settings">Settings</string>
     <string name="title_activity_main">MainActivity</string>
+    <string name="photo_archive">Billede arkiv</string>
+    <string name="ok">OK</string>
+    <string name="confirm">Bekræft</string>
+    <string name="confirmDeleteImg">Ønsker du at slette billedet</string>
+    <string name="incomeShownInBank">Indtægt vist \ni bank</string>
+    <string name="spendingCash">Udgift \nkontant</string>
+    <string name="expenseShownInBank">Udgift vist \ni bank</string>
+    <string name="other">Andet</string>
+    <string name="alert_body_networkerror">Ingen internet forbindelse. Billedet lagres nu i en kø, så du kan sende det senere</string>
+    
+    
 
 </resources>

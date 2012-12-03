@@ -7,6 +7,7 @@ import java.io.OutputStream;
 import java.util.Date;
 import java.util.List;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
@@ -17,6 +18,7 @@ import android.graphics.Matrix;
 import android.graphics.PixelFormat;
 import android.hardware.Camera;
 import android.hardware.Camera.Size;
+import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -30,7 +32,7 @@ import android.view.View.OnClickListener;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-public class CameraActivity extends Activity implements OnClickListener, Callback, Camera.PictureCallback, Camera.ErrorCallback {
+public class CameraActivity extends Activity implements OnClickListener, Callback, Camera.PictureCallback, Camera.ErrorCallback, Camera.ShutterCallback {
 	SharedPreferences sp;
 	SurfaceView cameraView;
 	SurfaceHolder surfaceHolder;
@@ -39,19 +41,18 @@ public class CameraActivity extends Activity implements OnClickListener, Callbac
 	// -------------------
 	public static File pathToSave = null;
 	boolean takingPictures = true;
-	public static final String SAVE_PATH = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/dk.ebogholderen.images/files/";
 	private Uri imgUri;
-	
+
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_camera);
 		//
-		imgCamera = (ImageView)findViewById(R.id.imgCamera);
+		imgCamera = (ImageView) findViewById(R.id.imgCamera);
 		imgCamera.setOnClickListener(this);
 		//
-		pathToSave = new File(SAVE_PATH);
+		pathToSave = new File(MainActivity.SAVE_PATH);
 		if (!pathToSave.exists())
 			pathToSave.mkdirs();
 		// hack for avoiding these images from being seen in mobile's Gallery
@@ -144,7 +145,6 @@ public class CameraActivity extends Activity implements OnClickListener, Callbac
 	}
 
 	private void stopTakingPictures() {
-		takingPictures = false;
 		if (camera != null) {
 			camera.stopPreview();
 			camera.release();
@@ -160,19 +160,27 @@ public class CameraActivity extends Activity implements OnClickListener, Callbac
 		Matrix matrix = new Matrix();
 		matrix.postRotate(90);
 		b = Bitmap.createBitmap(b, 0, 0, b.getWidth(), b.getHeight(), matrix, true);
-		// store the image
-		writeImageToSDCard(b, MainActivity.APP_NAME+"_" + new Date().getTime() + ".jpg");
 		//
-		//String url = MediaStore.Images.Media.insertImage(getContentResolver(), b, "ImageUploader_" + new Date().getTime(), "ImageUploader App Image");
+		stopTakingPictures();
+		// store the image
+		writeImageToSDCard(b, MainActivity.APP_NAME + "_" + new Date().getTime() + ".jpg");
+		//
+		// String url = MediaStore.Images.Media.insertImage(getContentResolver(), b, "ImageUploader_" + new Date().getTime(), "ImageUploader App Image");
 		// get ready for taking next picture only if stopTakingPictures is not
 		// called
-		//camera.startPreview();
+		// camera.startPreview();
 	}
 
 	public void onError(int error, Camera camera) {
 		Toast.makeText(CameraActivity.this, "Camera error. Restarting camera.", Toast.LENGTH_LONG).show();
 		stopTakingPictures();
 		startTakingPictures(surfaceHolder);
+	}
+
+	@Override
+	public void onShutter() {
+		AudioManager mgr = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        mgr.playSoundEffect(AudioManager.STREAM_NOTIFICATION);
 	}
 
 	/******************************************************************************************************************/
@@ -197,27 +205,28 @@ public class CameraActivity extends Activity implements OnClickListener, Callbac
 	public void onClick(View v) {
 		switch (v.getId()) {
 			case R.id.imgCamera:
-				camera.takePicture(null, null, null, CameraActivity.this);
+				if (camera != null)
+					camera.takePicture(CameraActivity.this, null, null, CameraActivity.this);
 			break;
 		}
 	}
-	
+
 	/******************************************************************************************************************/
 	private void reviewImage() {
 		Intent i = new Intent(CameraActivity.this, ImageReviewActivity.class);
 		i.putExtra("img", imgUri.toString());
 		startActivityForResult(i, MainActivity.REVIEW_REQUEST);
 	}
-	
+
 	/******************************************************************************************************************/
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		if(resultCode == RESULT_OK) {
-			switch(requestCode) {
+		if (resultCode == RESULT_OK) {
+			switch (requestCode) {
 				case MainActivity.REVIEW_REQUEST:
 					setResult(RESULT_OK, data);
 					finish();
-					break;
+				break;
 			}
 		}
 	}
