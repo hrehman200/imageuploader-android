@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <resources>
 
     <string name="app_name">ImageUploader</string>
@@ -11,7 +12,32 @@
     <string name="expenseShownInBank">Udgift vist \ni bank</string>
     <string name="other">Andet</string>
     <string name="alert_body_networkerror">Ingen internet forbindelse. Billedet lagres nu i en kø, så du kan sende det senere</string>
+    <!-- Startup Dialogs -->
+    <string name="welcomeTo">Velkommen til eBogholderen</string>
+    <string name="welcome1Message">eBogholderen er en komplet regnskabsydelse. Vi laver alt dit bogholderi, inklusive momsopgørelser og årsregnskab for kun 4.800 kr pr. år.\n\nMed eBogholderen skal du ikke bruge tid på regnskab. Det eneste du skal, er at tage billeder af dine regninger og kvitteringer, så klarer vi resten.\n\nDen lave pris er mulig, fordi vi arbejder papirløst.\n\nDu kan ringe til os på telefon 31790071.</string>
+    <string name="nextSide">Næste side...</string>
+    <string name="welcome2Message">Som kunde får du:\n\n
+	    • Velkomstsamtale med vores bogholder\n
+	    • Bogføring og kontering af op til 500 bilag\n
+	    • Udarbejdelse af årsregnskab\n
+	    • Udarbejdelse af momsopgørelser (både for kvartals- og halvårsmoms)\n
+	    • Løbende afstemning af banken\n
+	    • En times sammenlagt rådgivning fra vores erfarne bogholdere (yderligere rådgivning kan tilkøbes)\n
+	    • Sikker opbevaring af dine elektroniske bilag på vores servere\n\n
+	    Vi bruger erfarne, FFB godkendte bogholdere.\n\n
+	    Ønsker du at vi skal lave dit regnskab for 2012, kan du ringe til os på 31790071.</string>
+    <string name="back">Tilbage</string>
+    <string name="tryUsFreeFor1Month">Prøv os gratis i én måned</string>
+    <string name="emailFormText">Du har mulighed for at prøve eBogholderen gratis og uforpligtende i én måned. Og du kan allerede nu begynde at tage billeder af dine bilag.\n\nFor at prøve tjenesten skal vi bruge følgende oplysninger:</string>
+    <string name="contactPerson">Kontaktperson</string>
+    <string name="email">Email</string>
+    <string name="telephone">Telefon</string>
+    <string name="cvr">CVR</string>
+    <string name="sendInformation">Send oplysninger</string>
+    <string name="enjoyMessage">Tak fordi du tilmeldte dig. Du kan nu begynde at sende os dine bilag. Efter at din prøveperiode er afsluttet, vil vi kontakte dig for at høre om du ønsker, at vi skal lave dit moms- og årsregnskab.\n\nHar du nogen spørgsmål, kan du altid ringe til os på 31790071.\n\nVi glæder os til at arbejde sammen med dig.</string>
+    <string name="goAhead">Gå i gang</string>
+    <string name="plzEnterProperValues">Angiv korrekte værdier</string>
+    <string name="plzWait">Please wait</string>
+    <string name="sendingEmail">Sending Email</string>
     
-    
-
 </resources>

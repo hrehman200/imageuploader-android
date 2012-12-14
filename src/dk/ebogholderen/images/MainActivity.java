@@ -38,7 +38,8 @@ import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import com.google.gson.reflect.TypeToken;
 
-public class MainActivity extends Activity implements OnClickListener, OnItemClickListener {
+public class MainActivity extends Activity implements OnClickListener, OnItemClickListener
+{
 	Button btnGallery, btnEmail;
 	ImageButton btnCamera;
 	GridView gridView;
@@ -56,17 +57,11 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 	static final int REVIEW_REQUEST = 2;
 	static final int REVIEW_RESULT = 3;
 	static final String UPLOAD_LIST_FILE = "uploadlist.txt";
-	static String DEVICE_ID = "";
-	static final String SERVER_URL = "http://images.ebogholderen.dk/PicUploader/ImageUploader.php?devicetoken=%s&imagetype=%s";
-	
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		//
-		TelephonyManager tm = (TelephonyManager) MainActivity.this.getSystemService(Context.TELEPHONY_SERVICE);
-		DEVICE_ID = tm.getDeviceId();
 		//
 		btnCamera = (ImageButton) findViewById(R.id.imgCamera);
 		btnCamera.setOnClickListener(this);
@@ -213,7 +208,7 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 		emailIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 		// emailIntent.setType("vnd.android.cursor.item/email");
 		emailIntent.setType("text/html");
-		emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, new String[] { "hrehman200@gmail.com" });
+		emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, new String[] {});
 		emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "");
 		emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, "");
 		emailIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
@@ -259,7 +254,7 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 	/********************************************************************************************************/
 	private void deselectAllImagesInGrid(int except) {
 		for (int i = 0; i < gridView.getAdapter().getCount(); i++) {
-			if(i == except)
+			if (i == except)
 				continue;
 			GridItem gi = (GridItem) gridView.getItemAtPosition(i);
 			View parentView = (View) gi.pb.getParent();
@@ -314,14 +309,16 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 	}
 
 	/*******************************************************************************************************/
-	private class UriDeserializer implements JsonDeserializer<Uri> {
+	private class UriDeserializer implements JsonDeserializer<Uri>
+	{
 		@Override
 		public Uri deserialize(final JsonElement src, final Type srcType, final JsonDeserializationContext context) throws JsonParseException {
 			return Uri.parse(src.getAsString());
 		}
 	}
 
-	private class UriSerializer implements JsonSerializer<Uri> {
+	private class UriSerializer implements JsonSerializer<Uri>
+	{
 		public JsonElement serialize(Uri src, Type typeOfSrc, JsonSerializationContext context) {
 			return new JsonPrimitive(src.toString());
 		}

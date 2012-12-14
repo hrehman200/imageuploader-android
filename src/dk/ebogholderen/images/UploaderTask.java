@@ -30,10 +30,12 @@ class UploaderTask extends AsyncTask<Void, Integer, Void> {
 	Context ctx;
 	GridItem gridItem;
 	boolean exceptionOccured;
+	Prefs prefs;
 
 	public UploaderTask(Context ctx, GridItem gridItem) {
 		this.ctx = ctx;
 		this.gridItem = gridItem;
+		prefs = new Prefs(ctx);
 	}
 
 	@Override
@@ -48,7 +50,7 @@ class UploaderTask extends AsyncTask<Void, Integer, Void> {
 	protected Void doInBackground(Void... params) {
 		final HttpClient httpClient = new DefaultHttpClient();
 		HttpContext httpContext = new BasicHttpContext();
-		final HttpPost httpPost = new HttpPost(String.format(MainActivity.SERVER_URL, MainActivity.DEVICE_ID, URLEncoder.encode(gridItem.category)));
+		final HttpPost httpPost = new HttpPost(String.format(RESTServiceClient.SERVER_URL, Prefs.DEVICE_ID, URLEncoder.encode(gridItem.category)));
 		try {
 			CustomMultipartEntity multipartContent = new CustomMultipartEntity(new ProgressListener() {
 				@Override

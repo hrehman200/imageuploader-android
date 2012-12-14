@@ -179,8 +179,8 @@ public class CameraActivity extends Activity implements OnClickListener, Callbac
 
 	@Override
 	public void onShutter() {
-		AudioManager mgr = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        mgr.playSoundEffect(AudioManager.STREAM_NOTIFICATION);
+		//AudioManager mgr = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        //mgr.playSoundEffect(AudioManager.STREAM_NOTIFICATION);
 	}
 
 	/******************************************************************************************************************/

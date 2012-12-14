@@ -16,8 +16,9 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -32,7 +33,8 @@ import android.telephony.TelephonyManager;
 import android.text.Html;
 import android.util.Log;
 
-public class Utility {
+public class Utility
+{
 	public static final String DATE_FORMAT = "yyyy-MM-dd";
 	public static final String DATETIME_FORMAT = "yyyy-MM-dd hh:mm:ss";
 	public static final String MIME_TYPE_PDF = "application/pdf";
@@ -245,7 +247,7 @@ public class Utility {
 		cursor.moveToFirst();
 		return cursor.getString(column_index);
 	}
-	
+
 	/*****************************************************************************************************/
 	/**
 	 * @param picUri
@@ -285,10 +287,10 @@ public class Utility {
 		FileOutputStream fos;
 		try {
 			File f = new File(filepath);
-			if(!f.exists())
+			if (!f.exists())
 				f.mkdirs();
 			f = new File(filepath, filename);
-			if(!f.exists())
+			if (!f.exists())
 				f.createNewFile();
 			fos = new FileOutputStream(f);
 			ObjectOutputStream oos = new ObjectOutputStream(fos);
@@ -309,10 +311,10 @@ public class Utility {
 		String s = "";
 		try {
 			File f = new File(filepath);
-			if(!f.exists())
+			if (!f.exists())
 				f.mkdirs();
 			f = new File(filepath, filename);
-			if(!f.exists())
+			if (!f.exists())
 				f.createNewFile();
 			FileInputStream fis = new FileInputStream(f);
 			ObjectInputStream ois = new ObjectInputStream(fis);
@@ -328,5 +330,19 @@ public class Utility {
 			e.printStackTrace();
 		}
 		return s;
+	}
+
+	/*****************************************************************************************************/
+	/**
+	 * Validate hex with regular expression
+	 * 
+	 * @param hex hex for validation
+	 * @return true valid hex, false invalid hex
+	 */
+	public static boolean isValidEmail(String email) {
+		String EMAIL_PATTERN = "^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$";
+		Pattern pattern = Pattern.compile(EMAIL_PATTERN);
+		Matcher matcher = pattern.matcher(email);
+		return matcher.matches();
 	}
 }
