@@ -44,6 +44,8 @@ public class ImageAdapter extends BaseAdapter {
 		gridItem.pb = holder.progressBar;
 		if(gridItem.isUploaded)
 			gridItem.pb.setProgress(100);
+		else
+			gridItem.pb.setProgress(0);
 		return itemView;
 	}
 

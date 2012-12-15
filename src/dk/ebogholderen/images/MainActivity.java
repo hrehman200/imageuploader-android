@@ -6,15 +6,15 @@ import java.util.ArrayList;
 import java.util.Date;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.net.ConnectivityManager;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore.Images;
-import android.telephony.TelephonyManager;
-import android.text.Html;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
@@ -26,7 +26,6 @@ import android.widget.FrameLayout;
 import android.widget.GridView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonDeserializationContext;
@@ -49,6 +48,7 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 	ImageView imgFullImage, imgCloseFullImage;
 	ArrayList<UploaderTask> arrUploadTasks;
 	boolean isResuming = true;
+	NetworkReceiver netReceiver;
 	//
 	static final String APP_NAME = "ImageUploader";
 	static final String SAVE_PATH = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/dk.ebogholderen.images/files/";
@@ -84,6 +84,8 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 		imgCloseFullImage.setOnClickListener(this);
 		//
 		arrUploadTasks = new ArrayList<UploaderTask>();
+		//
+		netReceiver = new NetworkReceiver(this);
 	}
 
 	/********************************************************************************************************/
@@ -139,6 +141,8 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 	@Override
 	protected void onResume() {
 		super.onResume();
+		IntentFilter mNetworkStateFilter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
+		registerReceiver(netReceiver, mNetworkStateFilter);
 		if (isResuming) {
 			Gson gson = new GsonBuilder().registerTypeAdapter(Uri.class, new UriSerializer()).registerTypeAdapter(Uri.class, new UriDeserializer()).create();
 			String jsonData = Utility.deserializeData(MainActivity.SAVE_PATH, UPLOAD_LIST_FILE);
@@ -150,9 +154,6 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 				arrUploadTasks = new ArrayList<UploaderTask>();
 				for (GridItem gi : ImageAdapter.arrImages) {
 					UploaderTask task = new UploaderTask(MainActivity.this, gi);
-					if (!gi.isUploaded) {
-						task.execute();
-					}
 					// add the scheduled task to array so that later we stop/restart this task
 					arrUploadTasks.add(task);
 				}
@@ -164,6 +165,10 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 	@Override
 	protected void onPause() {
 		super.onPause();
+		try {
+			unregisterReceiver(netReceiver);
+		}
+		catch (IllegalArgumentException e) {}
 		Gson gson = new GsonBuilder().registerTypeAdapter(Uri.class, new UriSerializer()).registerTypeAdapter(Uri.class, new UriDeserializer()).create();
 		String jsonData = gson.toJson(ImageAdapter.arrImages);
 		Utility.serializeData(MainActivity.SAVE_PATH, UPLOAD_LIST_FILE, jsonData);
@@ -179,9 +184,25 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 			imgAdapter.notifyDataSetChanged();
 			Log.v("---", imgUri.toString());
 			UploaderTask task = new UploaderTask(MainActivity.this, gridItem);
-			task.execute();
 			// add the scheduled task to array so that later we stop/restart this task
 			arrUploadTasks.add(task);
+			//startDownload();
+		}
+	}
+
+	/********************************************************************************************************/
+	public void startDownload() {
+		for (UploaderTask task : arrUploadTasks) {
+			if (task.gridItem.isUploaded == false) {
+				try {
+					GridItem gi = task.gridItem;
+					task = new UploaderTask(MainActivity.this, gi);
+					task.execute();
+				}
+				catch (IllegalStateException e) {
+					e.printStackTrace();
+				}
+			}
 		}
 	}
 

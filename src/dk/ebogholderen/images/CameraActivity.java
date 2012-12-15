@@ -32,7 +32,7 @@ import android.view.View.OnClickListener;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-public class CameraActivity extends Activity implements OnClickListener, Callback, Camera.PictureCallback, Camera.ErrorCallback, Camera.ShutterCallback {
+public class CameraActivity extends Activity implements OnClickListener, Callback, Camera.PictureCallback, Camera.ErrorCallback {
 	SharedPreferences sp;
 	SurfaceView cameraView;
 	SurfaceHolder surfaceHolder;
@@ -177,12 +177,6 @@ public class CameraActivity extends Activity implements OnClickListener, Callbac
 		startTakingPictures(surfaceHolder);
 	}
 
-	@Override
-	public void onShutter() {
-		//AudioManager mgr = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        //mgr.playSoundEffect(AudioManager.STREAM_NOTIFICATION);
-	}
-
 	/******************************************************************************************************************/
 	private void writeImageToSDCard(Bitmap b, String fileName) {
 		OutputStream outStream = null;
@@ -206,7 +200,7 @@ public class CameraActivity extends Activity implements OnClickListener, Callbac
 		switch (v.getId()) {
 			case R.id.imgCamera:
 				if (camera != null)
-					camera.takePicture(CameraActivity.this, null, null, CameraActivity.this);
+					camera.takePicture(null, null, null, CameraActivity.this);
 			break;
 		}
 	}

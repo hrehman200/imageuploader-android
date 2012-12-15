@@ -1,6 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <resources>
-
     <string name="app_name">ImageUploader</string>
     <string name="title_activity_main">MainActivity</string>
     <string name="photo_archive">Billede arkiv</string>
@@ -39,5 +38,5 @@
     <string name="plzEnterProperValues">Angiv korrekte værdier</string>
     <string name="plzWait">Please wait</string>
     <string name="sendingEmail">Sending Email</string>
-    
+    <string name="networkError">Ingen internet forbindelse. Billedet lagres nu i en kø, så du kan sende det senere</string>
 </resources>
