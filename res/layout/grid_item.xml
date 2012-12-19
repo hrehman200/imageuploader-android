@@ -21,24 +21,27 @@
         android:layout_marginBottom="3dp"
         android:layout_marginLeft="2dp"
         android:layout_marginRight="2dp"
-        android:progress="0" />
+        android:progress="0"
+        android:progressDrawable="@drawable/greenprogress" />
 
     <ImageView
         android:id="@+id/imgSelect"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
-        android:src="@drawable/select"
-        android:onClick="handleImgSelect" />
+        android:onClick="handleImgSelect"
+        android:scaleType="centerInside"
+        android:src="@drawable/select" />
 
     <ImageView
         android:id="@+id/imgDelete"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
         android:layout_alignParentRight="true"
         android:layout_alignParentTop="true"
-        android:src="@drawable/delete"
-        android:onClick="handleImgDelete" />
+        android:onClick="handleImgDelete"
+        android:scaleType="centerInside"
+        android:src="@drawable/delete" />
 
 </RelativeLayout>

@@ -32,7 +32,7 @@ public class RESTServiceClient {
 	Handler pHandler;
 
 	public RESTServiceClient(Context c, Handler pHandler) {
-		// this.ctx = c;
+		this.ctx = c;
 		//
 		prefs = new Prefs(c);
 		this.pHandler = pHandler;

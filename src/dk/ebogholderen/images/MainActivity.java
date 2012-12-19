@@ -6,12 +6,13 @@ import java.util.ArrayList;
 import java.util.Date;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore.Images;
@@ -26,6 +27,7 @@ import android.widget.FrameLayout;
 import android.widget.GridView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonDeserializationContext;
@@ -108,8 +110,7 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 				startActivityForResult(j, GALLERY_RESULT);
 			break;
 			case R.id.btnEmail:
-				GridItem gi = ImageAdapter.arrImages.get(selectedPosition);
-				shareViaEmail(gi.imgUri);
+				shareViaEmail();
 			break;
 			case R.id.imgCloseFullImage:
 				hideFullImage();
@@ -166,7 +167,7 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 	protected void onPause() {
 		super.onPause();
 		try {
-			unregisterReceiver(netReceiver);
+			// unregisterReceiver(netReceiver);
 		}
 		catch (IllegalArgumentException e) {}
 		Gson gson = new GsonBuilder().registerTypeAdapter(Uri.class, new UriSerializer()).registerTypeAdapter(Uri.class, new UriDeserializer()).create();
@@ -186,7 +187,7 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 			UploaderTask task = new UploaderTask(MainActivity.this, gridItem);
 			// add the scheduled task to array so that later we stop/restart this task
 			arrUploadTasks.add(task);
-			//startDownload();
+			// startDownload();
 		}
 	}
 
@@ -224,17 +225,36 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 	}
 
 	/********************************************************************************************************/
-	private void shareViaEmail(Uri picUri) {
+	private void shareViaEmail() {
 		Intent emailIntent = new Intent(android.content.Intent.ACTION_SEND);
 		emailIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 		// emailIntent.setType("vnd.android.cursor.item/email");
 		emailIntent.setType("text/html");
-		emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, new String[] {});
-		emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "");
-		emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, "");
+		emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, new String[] {"hrehman200@gmail.com"});
+		emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "Test");
+		emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, "Test");
 		emailIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-		File image = Utility.uriToFile(MainActivity.this, picUri);
-		emailIntent.putExtra(android.content.Intent.EXTRA_STREAM, Uri.fromFile(image));
+		//File image = Utility.uriToFile(MainActivity.this, picUri);
+		//emailIntent.putExtra(android.content.Intent.EXTRA_STREAM, Uri.fromFile(image));
+		ArrayList<Uri> arrUri = new ArrayList<Uri>();
+		for (int i = 0; i < gridView.getAdapter().getCount(); i++) {
+			GridItem gi = (GridItem)gridView.getAdapter().getItem(i);
+			if(gi.isSelected) {
+				File image = Utility.uriToFile(MainActivity.this, gi.imgUri);
+				//emailIntent.putExtra(android.content.Intent.EXTRA_STREAM, Uri.fromFile(image));
+				arrUri.add(Uri.fromFile(image));
+			}
+		}
+		if(arrUri.size() > 1) {
+			emailIntent.setAction(Intent.ACTION_SEND_MULTIPLE);
+			emailIntent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, arrUri);
+		}
+		else
+		if(arrUri.size() == 1) {
+			emailIntent.putExtra(android.content.Intent.EXTRA_STREAM, arrUri.get(0));
+		}
+		else
+			return;
 		startActivity(Intent.createChooser(emailIntent, "Send mail using..."));
 	}
 
@@ -249,21 +269,23 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 	/********************************************************************************************************/
 	public void handleImgSelect(View v) {
 		selectedPosition = (Integer) v.getTag();
-		deselectAllImagesInGrid(selectedPosition);
+		// deselectAllImagesInGrid(selectedPosition);
+		
+		GridItem gi = (GridItem) gridView.getAdapter().getItem(selectedPosition);
 		View parentView = (View) v.getParent();
-		Log.v("parentView", parentView.toString());
-		if (parentView.getBackground() == null) {
-			parentView.setBackgroundResource(R.drawable.griditem_border);
-			btnEmail.setEnabled(true);
+		if (!gi.isSelected) {
+			gi.isSelected = true;
+			parentView .setBackgroundResource(R.drawable.griditem_border);
 			//
 			UploaderTask t = arrUploadTasks.get(selectedPosition);
 			t = new UploaderTask(MainActivity.this, t.gridItem);
 			t.execute();
 		}
 		else {
+			gi.isSelected = false;
 			parentView.setBackgroundDrawable(null);
-			btnEmail.setEnabled(false);
 		}
+		enableDisableEmailBtn();
 	}
 
 	/********************************************************************************************************/
@@ -273,13 +295,14 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 	}
 
 	/********************************************************************************************************/
-	private void deselectAllImagesInGrid(int except) {
+	private void enableDisableEmailBtn() {
+		btnEmail.setEnabled(false);
 		for (int i = 0; i < gridView.getAdapter().getCount(); i++) {
-			if (i == except)
-				continue;
 			GridItem gi = (GridItem) gridView.getItemAtPosition(i);
-			View parentView = (View) gi.pb.getParent();
-			parentView.setBackgroundDrawable(null);
+			if(gi.isSelected) {
+				btnEmail.setEnabled(true);
+				break;
+			}
 		}
 	}
 
@@ -314,6 +337,8 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 				//
 				ImageAdapter.arrImages.remove(position);
 				imgAdapter.notifyDataSetChanged();
+				//
+				enableDisableEmailBtn();
 			}
 		});
 		alert.setNegativeButton(R.string.photo_archive, new DialogInterface.OnClickListener() {
@@ -324,6 +349,8 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 				//
 				ImageAdapter.arrImages.remove(position);
 				imgAdapter.notifyDataSetChanged();
+				//
+				enableDisableEmailBtn();
 			}
 		});
 		alert.show();

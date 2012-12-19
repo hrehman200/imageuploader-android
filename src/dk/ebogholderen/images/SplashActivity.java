@@ -138,7 +138,10 @@ public class SplashActivity extends Activity implements OnClickListener
 				}
 			}
 		});
-		client.sendEmail(devicetoken, email, contactPerson, phone, VATnumber);
+		if(Utility.isNetAvailable(this))
+			client.sendEmail(devicetoken, email, contactPerson, phone, VATnumber);
+		else
+			Toast.makeText(this, R.string.networkError, Toast.LENGTH_LONG).show();
 	}
 
 	protected void onResume() {

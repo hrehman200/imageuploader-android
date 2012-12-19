@@ -7,5 +7,6 @@ public class GridItem {
 	public Uri imgUri;
 	public String category;
 	public boolean isUploaded;
+	public boolean isSelected;
 	transient public ProgressBar pb;
 }

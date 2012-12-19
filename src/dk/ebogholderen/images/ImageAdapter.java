@@ -46,6 +46,12 @@ public class ImageAdapter extends BaseAdapter {
 			gridItem.pb.setProgress(100);
 		else
 			gridItem.pb.setProgress(0);
+		//
+		View parentView = (View)gridItem.pb.getParent();
+		if(gridItem.isSelected)
+			parentView.setBackgroundResource(R.drawable.griditem_border);
+		else
+			parentView.setBackgroundDrawable(null);
 		return itemView;
 	}
 

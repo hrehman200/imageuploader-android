@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.nio.channels.FileChannel;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
@@ -334,15 +335,46 @@ public class Utility
 
 	/*****************************************************************************************************/
 	/**
-	 * Validate hex with regular expression
+	 * Validate email with regular expression
 	 * 
-	 * @param hex hex for validation
-	 * @return true valid hex, false invalid hex
+	 * @param String email The email we want to validate
+	 * @return true if email is valid, false otherwise
 	 */
 	public static boolean isValidEmail(String email) {
 		String EMAIL_PATTERN = "^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$";
 		Pattern pattern = Pattern.compile(EMAIL_PATTERN);
 		Matcher matcher = pattern.matcher(email);
 		return matcher.matches();
+	}
+
+	/*****************************************************************************************************/
+	/**
+	 * Copy file from source to destination address.
+	 * 
+	 * @param File source The source file object from where to copy.
+	 * @param File destination The destination file object.
+	 * @return true if file copied, false otherwise.
+	 */
+	public static boolean copyFile(File source, File destination) {
+		boolean isCopied = false;
+		if (source.exists()) {
+			try {
+				FileChannel src = new FileInputStream(source).getChannel();
+				FileChannel dst = new FileOutputStream(destination).getChannel();
+				dst.transferFrom(src, 0, src.size());
+				src.close();
+				dst.close();
+				isCopied = true;
+			}
+			catch (FileNotFoundException e) {
+				isCopied = false;
+				e.printStackTrace();
+			}
+			catch (IOException e) {
+				isCopied = false;
+				e.printStackTrace();
+			}
+		}
+		return isCopied;
 	}
 }

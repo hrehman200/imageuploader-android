@@ -125,11 +125,11 @@ public class CameraActivity extends Activity implements OnClickListener, Callbac
 			 * Picture Resolution Usually larger sizes will be at 0 index
 			 */
 			List<Size> listSizes = parameters.getSupportedPictureSizes();
-			int w = 1024, h = 768;
+			int w = 1600, h = 1200;
 			for (Size s : listSizes) {
 				Log.v("---", s.width + "x" + s.height);
-				w = s.width;
-				h = s.height;
+				//w = s.width;
+				//h = s.height;
 			}
 			parameters.setPictureSize(w, h);
 			camera.setParameters(parameters);
@@ -155,7 +155,7 @@ public class CameraActivity extends Activity implements OnClickListener, Callbac
 	/******************************************************************************************************************/
 	public void onPictureTaken(byte[] data, Camera camera) {
 		Options bmpOptions = new BitmapFactory.Options();
-		bmpOptions.inSampleSize = 2;
+		//bmpOptions.inSampleSize = 2;
 		Bitmap b = BitmapFactory.decodeByteArray(data, 0, data.length, bmpOptions);
 		Matrix matrix = new Matrix();
 		matrix.postRotate(90);
