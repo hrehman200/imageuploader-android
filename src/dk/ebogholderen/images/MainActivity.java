@@ -19,6 +19,7 @@ import android.provider.MediaStore.Images;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
+import android.view.WindowManager;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
@@ -59,11 +60,14 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 	static final int REVIEW_REQUEST = 2;
 	static final int REVIEW_RESULT = 3;
 	static final String UPLOAD_LIST_FILE = "uploadlist.txt";
+	static final int DESIRED_WIDTH = 1600;
+	static final int DESIRED_HEIGHT = 1200;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 		//
 		btnCamera = (ImageButton) findViewById(R.id.imgCamera);
 		btnCamera.setOnClickListener(this);
@@ -160,6 +164,7 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 				}
 			}
 		}
+		enableDisableEmailBtn();
 	}
 
 	/********************************************************************************************************/
@@ -220,6 +225,7 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 	/*******************************************************************************************************/
 	private void reviewImage(Uri imgUri) {
 		Intent i = new Intent(MainActivity.this, ImageReviewActivity.class);
+		i.setFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
 		i.putExtra("img", imgUri.toString());
 		startActivityForResult(i, REVIEW_REQUEST);
 	}
@@ -312,12 +318,14 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 		rlFullImage.setVisibility(View.VISIBLE);
 		imgFullImage.setImageURI(uri);
 		btnEmail.setEnabled(true);
+		enableDisableEmailBtn();
 	}
 
 	/********************************************************************************************************/
 	private void hideFullImage() {
 		gridView.setVisibility(View.VISIBLE);
 		rlFullImage.setVisibility(View.INVISIBLE);
+		enableDisableEmailBtn();
 	}
 
 	/*******************************************************************************************************/

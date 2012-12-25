@@ -3,17 +3,22 @@ package dk.ebogholderen.images;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnKeyListener;
 import android.view.Window;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 public class SplashActivity extends Activity implements OnClickListener
@@ -22,6 +27,8 @@ public class SplashActivity extends Activity implements OnClickListener
 	Handler handler;
 	SplashHandler splashHandler;
 	Prefs prefs;
+	Dialog dialog;
+	Button btnSendInformation;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -37,10 +44,10 @@ public class SplashActivity extends Activity implements OnClickListener
 			handler = new Handler();
 			splashHandler = new SplashHandler();
 			handler.postDelayed(splashHandler, 3000);
-			//
-			imgSplash = (ImageView) findViewById(R.id.imgSplash);
-			imgSplash.setOnClickListener(this);
 		}
+		//
+		imgSplash = (ImageView) findViewById(R.id.imgSplash);
+		imgSplash.setOnClickListener(this);
 	}
 
 	private void showWelcome1() {
@@ -73,7 +80,7 @@ public class SplashActivity extends Activity implements OnClickListener
 	}
 
 	private void showEmailForm() {
-		final Dialog dialog = new Dialog(this);
+		dialog = new Dialog(this);
 		dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
 		dialog.setContentView(R.layout.dialog_email);
 		//
@@ -81,25 +88,43 @@ public class SplashActivity extends Activity implements OnClickListener
 		btnBackToWelcome.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				dialog.dismiss();
+				hideKeyboard(v);
+				dismissDialog();
 				showWelcome2();
 			}
 		});
 		//
-		Button btnSendInformation = (Button) dialog.findViewById(R.id.btnSendInformation);
+		btnSendInformation = (Button) dialog.findViewById(R.id.btnSendInformation);
 		final EditText txtContactPerson = (EditText) dialog.findViewById(R.id.txtContactPerson);
+		txtContactPerson.setOnKeyListener(keyListener);
 		final EditText txtEmail = (EditText) dialog.findViewById(R.id.txtEmail);
+		txtEmail.setOnKeyListener(keyListener);
 		final EditText txtTelephone = (EditText) dialog.findViewById(R.id.txtTelephone);
+		txtTelephone.setOnKeyListener(keyListener);
 		final EditText txtCVR = (EditText) dialog.findViewById(R.id.txtCVR);
+		txtCVR.setOnKeyListener(keyListener);
 		btnSendInformation.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
+				hideKeyboard(v);
 				// make sure user provided valid values
-				if (!Utility.isValidEmail(txtEmail.getText().toString()) || txtContactPerson.getText().toString().equalsIgnoreCase("") || txtTelephone.getText().toString().equalsIgnoreCase("") || txtCVR.getText().toString().equalsIgnoreCase("")) {
-					Toast.makeText(SplashActivity.this, R.string.plzEnterProperValues, Toast.LENGTH_LONG).show();
+				if (txtContactPerson.getText().toString().equalsIgnoreCase("")) {
+					Toast.makeText(SplashActivity.this, R.string.plzEnterProperContactPerson, Toast.LENGTH_LONG).show();
 					return;
 				}
-				dialog.dismiss();
+				else if (!Utility.isValidEmail(txtEmail.getText().toString())) {
+					Toast.makeText(SplashActivity.this, R.string.plzEnterProperEmail, Toast.LENGTH_LONG).show();
+					return;
+				}
+				else if (txtTelephone.getText().toString().equalsIgnoreCase("")) {
+					Toast.makeText(SplashActivity.this, R.string.plzEnterProperTelephone, Toast.LENGTH_LONG).show();
+					return;
+				}
+				else if (txtCVR.getText().toString().equalsIgnoreCase("")) {
+					Toast.makeText(SplashActivity.this, R.string.plzEnterProperCVR, Toast.LENGTH_LONG).show();
+					return;
+				}
+				dismissDialog();
 				showEnjoyMessage(Prefs.DEVICE_ID, txtEmail.getText().toString(), txtContactPerson.getText().toString(), txtTelephone.getText().toString(), txtCVR.getText().toString());
 			}
 		});
@@ -138,7 +163,7 @@ public class SplashActivity extends Activity implements OnClickListener
 				}
 			}
 		});
-		if(Utility.isNetAvailable(this))
+		if (Utility.isNetAvailable(this))
 			client.sendEmail(devicetoken, email, contactPerson, phone, VATnumber);
 		else
 			Toast.makeText(this, R.string.networkError, Toast.LENGTH_LONG).show();
@@ -147,6 +172,27 @@ public class SplashActivity extends Activity implements OnClickListener
 	protected void onResume() {
 		super.onResume();
 	}
+
+	OnKeyListener keyListener = new OnKeyListener() {
+		public boolean onKey(View v, int keyCode, KeyEvent event) {
+			// If the event is a key-down event on the "enter" button
+			if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER)) {
+				// Perform action on key press
+				LinearLayout linEmailDialog = (LinearLayout) dialog.findViewById(R.id.linEmailDialog);
+				int i = Integer.parseInt(v.getTag().toString());
+				if (i == 4) {
+					btnSendInformation.requestFocus();
+					hideKeyboard(v);
+				}
+				else {
+					View viewToFocus = linEmailDialog.findViewWithTag(Integer.toString(i + 1));
+					viewToFocus.requestFocus();
+				}
+				return true;
+			}
+			return false;
+		}
+	};
 
 	class SplashHandler implements Runnable
 	{
@@ -160,16 +206,28 @@ public class SplashActivity extends Activity implements OnClickListener
 	public void onClick(View v) {
 		switch (v.getId()) {
 			case R.id.imgSplash:
-				closeSplash();
+				if (!prefs.getBoolean(Prefs.KEY_EMAIL_REGISTERED, false))
+					showWelcome1();
+				else
+					closeSplash();
 			break;
 		}
 	}
 
 	private void closeSplash() {
-		if(handler != null)
+		if (handler != null)
 			handler.removeCallbacks(splashHandler);
 		Intent i = new Intent(SplashActivity.this, MainActivity.class);
 		startActivity(i);
 		SplashActivity.this.finish();
+	}
+
+	private void dismissDialog() {
+		dialog.dismiss();
+	}
+
+	private void hideKeyboard(View v) {
+		InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+		imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
 	}
 }

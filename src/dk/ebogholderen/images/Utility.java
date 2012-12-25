@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.nio.channels.FileChannel;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -24,6 +25,8 @@ import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.media.ExifInterface;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -376,5 +379,60 @@ public class Utility
 			}
 		}
 		return isCopied;
+	}
+
+	/*****************************************************************************************************/
+	/**
+	 * Rotate bitmap to portrait.
+	 * 
+	 * @param String jpgPath The path of the image we want to rotate.
+	 * @return the rotated bitmap.
+	 */
+	public static Bitmap scaleAndRotateBitmap(String jpgPath, int desiredWidth, int desiredHeight) {
+		Bitmap resizedBitmap = null;
+		// create matrix for the manipulation
+		Matrix matrix = new Matrix();
+		try {
+			ExifInterface exif = new ExifInterface(jpgPath);
+			BitmapFactory.Options bmpOptions = new BitmapFactory.Options();
+			bmpOptions.inPurgeable = true;
+			Bitmap srcBitmap = BitmapFactory.decodeFile(jpgPath, bmpOptions);
+			// scale the bitmap
+			float scaleWidth = ((float) desiredWidth) / srcBitmap.getWidth();
+			float scaleHeight = ((float) desiredHeight) / srcBitmap.getHeight();
+			// rotate the bitmap
+			int orientation = Integer.parseInt(exif.getAttribute(ExifInterface.TAG_ORIENTATION));
+			switch (orientation) {
+				case ExifInterface.ORIENTATION_ROTATE_90:
+					matrix.postRotate(90);
+				break;
+				case ExifInterface.ORIENTATION_ROTATE_270:
+					matrix.postRotate(270);
+				break;
+			}
+			matrix.postScale(scaleWidth, scaleHeight);
+			resizedBitmap = Bitmap.createBitmap(srcBitmap, 0, 0, srcBitmap.getWidth(), srcBitmap.getHeight(), matrix, true);
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+		return resizedBitmap;
+	}
+
+	/******************************************************************************************************************/
+	public static File writeImageToSDCard(Bitmap b, String path, String fileName) {
+		OutputStream outStream = null;
+		File file = new File(path, fileName);
+		try {
+			outStream = new FileOutputStream(file);
+			if (b != null)
+				b.compress(Bitmap.CompressFormat.JPEG, 100, outStream);
+			outStream.flush();
+			outStream.close();
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+		return file;
 	}
 }

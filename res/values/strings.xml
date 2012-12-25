@@ -35,8 +35,12 @@
     <string name="sendInformation">Send oplysninger</string>
     <string name="enjoyMessage">Tak fordi du tilmeldte dig. Du kan nu begynde at sende os dine bilag. Efter at din prøveperiode er afsluttet, vil vi kontakte dig for at høre om du ønsker, at vi skal lave dit moms- og årsregnskab.\n\nHar du nogen spørgsmål, kan du altid ringe til os på 31790071.\n\nVi glæder os til at arbejde sammen med dig.</string>
     <string name="goAhead">Gå i gang</string>
-    <string name="plzEnterProperValues">Angiv korrekte værdier</string>
+    <string name="plzEnterProperContactPerson">Angiv ordentlig værdi for Kontaktperson felt</string>
+    <string name="plzEnterProperEmail">Indtast venligst en korrekt e-mail</string>
+    <string name="plzEnterProperTelephone">Indtast venligst en korrekt telefonnummer</string>
+    <string name="plzEnterProperCVR">Indtast venligst en korrekt værdi for CVR</string>
     <string name="plzWait">Please wait</string>
     <string name="sendingEmail">Sending Email</string>
     <string name="networkError">Ingen internet forbindelse. Billedet lagres nu i en kø, så du kan sende det senere</string>
+    <string name="send">Send</string>
 </resources>

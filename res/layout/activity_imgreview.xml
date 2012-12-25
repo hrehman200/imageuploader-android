@@ -19,12 +19,13 @@
 
             <Button
                 android:id="@+id/btnSend"
-                style="?android:attr/buttonStyleSmall"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentRight="true"
                 android:layout_alignParentTop="true"
-                android:text="Send" />
+                android:text="@string/send"
+                android:textSize="12dp" />
+
         </RelativeLayout>
 
         <ImageView
@@ -49,46 +50,42 @@
 
             <Button
                 android:id="@+id/btnIncomeInBank"
-                style="?android:attr/buttonStyleSmall"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignBottom="@string/incomeShownInBank"
                 android:lines="2"
                 android:text="@string/incomeShownInBank"
-                android:textSize="10dp" />
+                android:textSize="12dp" />
 
             <Button
                 android:id="@+id/btnSpendingCash"
-                style="?android:attr/buttonStyleSmall"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignBaseline="@+id/btnIncomeInBank"
                 android:layout_alignBottom="@+id/btnIncomeInBank"
                 android:layout_toRightOf="@+id/btnIncomeInBank"
                 android:text="@string/spendingCash"
-                android:textSize="10dp" />
+                android:textSize="12dp" />
 
             <Button
                 android:id="@+id/btnExpenseInBank"
-                style="?android:attr/buttonStyleSmall"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignBaseline="@+id/btnSpendingCash"
                 android:layout_alignBottom="@+id/btnSpendingCash"
                 android:layout_toRightOf="@+id/btnSpendingCash"
                 android:text="@string/expenseShownInBank"
-                android:textSize="10dp" />
+                android:textSize="12dp" />
 
             <Button
                 android:id="@+id/btnOther"
-                style="?android:attr/buttonStyleSmall"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignTop="@+id/btnExpenseInBank"
                 android:layout_toRightOf="@+id/btnExpenseInBank"
                 android:lines="2"
                 android:text="@string/other"
-                android:textSize="10dp" />
+                android:textSize="12dp" />
 
         </RelativeLayout>
 

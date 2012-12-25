@@ -125,13 +125,12 @@ public class CameraActivity extends Activity implements OnClickListener, Callbac
 			 * Picture Resolution Usually larger sizes will be at 0 index
 			 */
 			List<Size> listSizes = parameters.getSupportedPictureSizes();
-			int w = 1600, h = 1200;
 			for (Size s : listSizes) {
 				Log.v("---", s.width + "x" + s.height);
 				//w = s.width;
 				//h = s.height;
 			}
-			parameters.setPictureSize(w, h);
+			parameters.setPictureSize(MainActivity.DESIRED_WIDTH, MainActivity.DESIRED_HEIGHT);
 			camera.setParameters(parameters);
 			camera.setErrorCallback(this);
 			camera.setPreviewDisplay(holder);
@@ -163,12 +162,9 @@ public class CameraActivity extends Activity implements OnClickListener, Callbac
 		//
 		stopTakingPictures();
 		// store the image
-		writeImageToSDCard(b, MainActivity.APP_NAME + "_" + new Date().getTime() + ".jpg");
-		//
-		// String url = MediaStore.Images.Media.insertImage(getContentResolver(), b, "ImageUploader_" + new Date().getTime(), "ImageUploader App Image");
-		// get ready for taking next picture only if stopTakingPictures is not
-		// called
-		// camera.startPreview();
+		File file = Utility.writeImageToSDCard(b, MainActivity.SAVE_PATH, MainActivity.APP_NAME + "_" + new Date().getTime() + ".jpg");
+		imgUri = Uri.parse(file.toString());
+		reviewImage();
 	}
 
 	public void onError(int error, Camera camera) {
@@ -177,23 +173,7 @@ public class CameraActivity extends Activity implements OnClickListener, Callbac
 		startTakingPictures(surfaceHolder);
 	}
 
-	/******************************************************************************************************************/
-	private void writeImageToSDCard(Bitmap b, String fileName) {
-		OutputStream outStream = null;
-		File file = new File(pathToSave, fileName);
-		try {
-			outStream = new FileOutputStream(file);
-			if (b != null)
-				b.compress(Bitmap.CompressFormat.JPEG, 100, outStream);
-			outStream.flush();
-			outStream.close();
-			imgUri = Uri.parse(file.toString());
-			reviewImage();
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
+	
 
 	/******************************************************************************************************************/
 	public void onClick(View v) {

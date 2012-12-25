@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.Date;
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
@@ -11,6 +12,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ImageView.ScaleType;
 import android.widget.Toast;
 
 public class ImageReviewActivity extends Activity implements OnClickListener
@@ -19,6 +21,8 @@ public class ImageReviewActivity extends Activity implements OnClickListener
 	Button btnSend, btnIncomeInBank, btnSpendingCash, btnExpenseInBank, btnOther;
 	Uri imgUri;
 	Drawable originalDrawable;
+	File imageFile;
+	Bitmap bmp;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -29,7 +33,11 @@ public class ImageReviewActivity extends Activity implements OnClickListener
 		imgUri = Uri.parse(img);
 		//
 		imgView = (ImageView) findViewById(R.id.imgReview);
-		imgView.setImageURI(imgUri);
+		imgView.setScaleType(ScaleType.CENTER);
+		imageFile = Utility.uriToFile(ImageReviewActivity.this, imgUri);
+		bmp = Utility.scaleAndRotateBitmap(imageFile.getAbsolutePath(), MainActivity.DESIRED_WIDTH, MainActivity.DESIRED_HEIGHT);
+		//imgView.setImageURI(imgUri);
+		imgView.setImageBitmap(bmp);
 		//
 		btnSend = (Button) findViewById(R.id.btnSend);
 		btnSend.setOnClickListener(this);
@@ -51,16 +59,19 @@ public class ImageReviewActivity extends Activity implements OnClickListener
 
 	@Override
 	public void onClick(View v) {
-		deselectAllButtons();
 		switch (v.getId()) {
 			case R.id.btnSend:
-				File image = Utility.uriToFile(ImageReviewActivity.this, imgUri);
+				btnSend.setBackgroundResource(R.drawable.button_bg_border);
+				//
 				String imgTag = v.getTag().toString().replace(" ", "_");
 				imgTag = imgTag.replace("\n", "");
-				File renamedFile = new File(MainActivity.SAVE_PATH, String.format("%s_%d.jpg", imgTag, new Date().getTime()));
+				String renamed = String.format("%s_%d.jpg", imgTag, new Date().getTime());
+				File renamedFile = new File(MainActivity.SAVE_PATH, renamed);
 				// if its a gallery image, copy it to our app folder
 				if (imgUri.isAbsolute()) {
-					Utility.copyFile(image, renamedFile);
+					// to avoid Gallery image being shown rotated in our app.
+					imageFile = Utility.writeImageToSDCard(bmp, MainActivity.SAVE_PATH, renamed);
+					//Utility.copyFile(image, renamedFile);
 					Intent i = new Intent();
 					i.putExtra("img", renamedFile.getAbsolutePath());
 					i.putExtra("category", v.getTag().toString());
@@ -68,7 +79,7 @@ public class ImageReviewActivity extends Activity implements OnClickListener
 					finish();
 				}
 				// else rename it to proper category
-				else if (image.renameTo(renamedFile)) {
+				else if (imageFile.renameTo(renamedFile)) {
 					Intent i = new Intent();
 					i.putExtra("img", renamedFile.getAbsolutePath());
 					i.putExtra("category", v.getTag().toString());
@@ -80,21 +91,25 @@ public class ImageReviewActivity extends Activity implements OnClickListener
 				}
 			break;
 			case R.id.btnIncomeInBank:
+				deselectAllButtons();
 				btnIncomeInBank.setBackgroundResource(R.drawable.button_bg_border);
 				btnSend.setTag(btnIncomeInBank.getText());
 				btnSend.setEnabled(true);
 			break;
 			case R.id.btnSpendingCash:
+				deselectAllButtons();
 				btnSpendingCash.setBackgroundResource(R.drawable.button_bg_border);
 				btnSend.setTag(btnSpendingCash.getText());
 				btnSend.setEnabled(true);
 			break;
 			case R.id.btnExpenseInBank:
+				deselectAllButtons();
 				btnExpenseInBank.setBackgroundResource(R.drawable.button_bg_border);
 				btnSend.setTag(btnExpenseInBank.getText());
 				btnSend.setEnabled(true);
 			break;
 			case R.id.btnOther:
+				deselectAllButtons();
 				btnOther.setBackgroundResource(R.drawable.button_bg_border);
 				btnSend.setTag(btnOther.getText());
 				btnSend.setEnabled(true);
