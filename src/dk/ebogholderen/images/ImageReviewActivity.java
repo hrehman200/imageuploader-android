@@ -33,7 +33,7 @@ public class ImageReviewActivity extends Activity implements OnClickListener
 		imgUri = Uri.parse(img);
 		//
 		imgView = (ImageView) findViewById(R.id.imgReview);
-		imgView.setScaleType(ScaleType.CENTER);
+		imgView.setScaleType(ScaleType.CENTER_INSIDE);
 		imageFile = Utility.uriToFile(ImageReviewActivity.this, imgUri);
 		bmp = Utility.scaleAndRotateBitmap(imageFile.getAbsolutePath(), MainActivity.DESIRED_WIDTH, MainActivity.DESIRED_HEIGHT);
 		//imgView.setImageURI(imgUri);
@@ -61,7 +61,7 @@ public class ImageReviewActivity extends Activity implements OnClickListener
 	public void onClick(View v) {
 		switch (v.getId()) {
 			case R.id.btnSend:
-				btnSend.setBackgroundResource(R.drawable.button_bg_border);
+				btnSend.setBackgroundResource(R.drawable.button_bg_selected);
 				//
 				String imgTag = v.getTag().toString().replace(" ", "_");
 				imgTag = imgTag.replace("\n", "");
@@ -92,25 +92,25 @@ public class ImageReviewActivity extends Activity implements OnClickListener
 			break;
 			case R.id.btnIncomeInBank:
 				deselectAllButtons();
-				btnIncomeInBank.setBackgroundResource(R.drawable.button_bg_border);
+				btnIncomeInBank.setBackgroundResource(R.drawable.button_bg_selected);
 				btnSend.setTag(btnIncomeInBank.getText());
 				btnSend.setEnabled(true);
 			break;
 			case R.id.btnSpendingCash:
 				deselectAllButtons();
-				btnSpendingCash.setBackgroundResource(R.drawable.button_bg_border);
+				btnSpendingCash.setBackgroundResource(R.drawable.button_bg_selected);
 				btnSend.setTag(btnSpendingCash.getText());
 				btnSend.setEnabled(true);
 			break;
 			case R.id.btnExpenseInBank:
 				deselectAllButtons();
-				btnExpenseInBank.setBackgroundResource(R.drawable.button_bg_border);
+				btnExpenseInBank.setBackgroundResource(R.drawable.button_bg_selected);
 				btnSend.setTag(btnExpenseInBank.getText());
 				btnSend.setEnabled(true);
 			break;
 			case R.id.btnOther:
 				deselectAllButtons();
-				btnOther.setBackgroundResource(R.drawable.button_bg_border);
+				btnOther.setBackgroundResource(R.drawable.button_bg_selected);
 				btnSend.setTag(btnOther.getText());
 				btnSend.setEnabled(true);
 			break;

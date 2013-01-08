@@ -22,7 +22,7 @@
         android:layout_marginLeft="2dp"
         android:layout_marginRight="2dp"
         android:progress="0"
-        android:progressDrawable="@drawable/greenprogress" />
+        android:progressDrawable="@drawable/redprogress" />
 
     <ImageView
         android:id="@+id/imgSelect"

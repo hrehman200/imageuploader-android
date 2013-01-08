@@ -62,6 +62,7 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 	static final String UPLOAD_LIST_FILE = "uploadlist.txt";
 	static final int DESIRED_WIDTH = 1600;
 	static final int DESIRED_HEIGHT = 1200;
+	static final String BUGSENSE_API_KEY = "3b870290";
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -156,11 +157,11 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 			if (arr != null && arr.size() > 0) {
 				ImageAdapter.arrImages = arr;
 				imgAdapter.notifyDataSetChanged();
-				arrUploadTasks = new ArrayList<UploaderTask>();
 				for (GridItem gi : ImageAdapter.arrImages) {
 					UploaderTask task = new UploaderTask(MainActivity.this, gi);
 					// add the scheduled task to array so that later we stop/restart this task
-					arrUploadTasks.add(task);
+					if(!arrUploadTasks.contains(task))
+						arrUploadTasks.add(task);
 				}
 			}
 		}
@@ -201,25 +202,16 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 		for (UploaderTask task : arrUploadTasks) {
 			if (task.gridItem.isUploaded == false) {
 				try {
-					GridItem gi = task.gridItem;
-					task = new UploaderTask(MainActivity.this, gi);
-					task.execute();
+					//GridItem gi = task.gridItem;
+					//task = new UploaderTask(MainActivity.this, gi);
+					if(task.state == task.ready)
+						task.execute();
 				}
 				catch (IllegalStateException e) {
 					e.printStackTrace();
 				}
 			}
 		}
-	}
-
-	/********************************************************************************************************/
-	private Uri getCameraOutputImageUri() {
-		File imagesFolder = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), APP_NAME);
-		if (!imagesFolder.exists())
-			imagesFolder.mkdirs();
-		File image = new File(imagesFolder, String.format("%s_%s.jpg", APP_NAME, new Date().getTime()));
-		Uri uriSavedImage = Uri.fromFile(image);
-		return uriSavedImage;
 	}
 
 	/*******************************************************************************************************/
@@ -236,9 +228,9 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 		emailIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 		// emailIntent.setType("vnd.android.cursor.item/email");
 		emailIntent.setType("text/html");
-		emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, new String[] {"hrehman200@gmail.com"});
-		emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "Test");
-		emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, "Test");
+		emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, new String[] {});
+		emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "");
+		emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, "");
 		emailIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
 		//File image = Utility.uriToFile(MainActivity.this, picUri);
 		//emailIntent.putExtra(android.content.Intent.EXTRA_STREAM, Uri.fromFile(image));
@@ -365,7 +357,7 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 	}
 
 	/*******************************************************************************************************/
-	private class UriDeserializer implements JsonDeserializer<Uri>
+	public static class UriDeserializer implements JsonDeserializer<Uri>
 	{
 		@Override
 		public Uri deserialize(final JsonElement src, final Type srcType, final JsonDeserializationContext context) throws JsonParseException {
@@ -373,7 +365,7 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 		}
 	}
 
-	private class UriSerializer implements JsonSerializer<Uri>
+	public static class UriSerializer implements JsonSerializer<Uri>
 	{
 		public JsonElement serialize(Uri src, Type typeOfSrc, JsonSerializationContext context) {
 			return new JsonPrimitive(src.toString());

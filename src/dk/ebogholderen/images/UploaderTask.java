@@ -2,7 +2,6 @@ package dk.ebogholderen.images;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 import java.net.URLEncoder;
 import java.net.UnknownHostException;
 import org.apache.http.HttpResponse;
@@ -16,20 +15,22 @@ import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.net.Uri;
+import android.graphics.Rect;
 import android.os.AsyncTask;
-import android.os.Looper;
 import android.util.Log;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 import dk.ebogholderen.images.CustomMultipartEntity.ProgressListener;
 
-class UploaderTask extends AsyncTask<Void, Integer, Void> {
+class UploaderTask extends AsyncTask<Void, Integer, Void>
+{
 	ProgressDialog pd;
 	long totalSize;
 	Context ctx;
 	GridItem gridItem;
 	boolean exceptionOccured;
+	byte ready = 1, running = 2, finished = 3;
+	byte state = ready;
 	Prefs prefs;
 
 	public UploaderTask(Context ctx, GridItem gridItem) {
@@ -40,17 +41,16 @@ class UploaderTask extends AsyncTask<Void, Integer, Void> {
 
 	@Override
 	protected void onPreExecute() {
-		pd = new ProgressDialog(ctx);
-		pd.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-		pd.setMessage("Uploading Picture...");
-		pd.setCancelable(false);
+		/* pd = new ProgressDialog(ctx); pd.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL); pd.setMessage("Uploading Picture..."); pd.setCancelable(false); */
 	}
 
 	@Override
 	protected Void doInBackground(Void... params) {
 		final HttpClient httpClient = new DefaultHttpClient();
 		HttpContext httpContext = new BasicHttpContext();
-		final HttpPost httpPost = new HttpPost(String.format(RESTServiceClient.SERVER_URL, Prefs.DEVICE_ID, URLEncoder.encode(gridItem.category)));
+		String url = String.format(RESTServiceClient.SERVER_URL, prefs.DEVICE_ID, URLEncoder.encode(gridItem.category));
+		Log.v("url", url);
+		final HttpPost httpPost = new HttpPost(url);
 		try {
 			CustomMultipartEntity multipartContent = new CustomMultipartEntity(new ProgressListener() {
 				@Override
@@ -64,7 +64,7 @@ class UploaderTask extends AsyncTask<Void, Integer, Void> {
 			});
 			File image = Utility.uriToFile(ctx, gridItem.imgUri);
 			// We use FileBody to transfer an image
-			multipartContent.addPart("imageFile", new FileBody(image));
+			multipartContent.addPart("newImage", new FileBody(image));
 			// multipartContent.addPart("imageFile", new FileBody(new File(this.imgPath)));
 			totalSize = multipartContent.getContentLength();
 			// Send it
@@ -79,12 +79,15 @@ class UploaderTask extends AsyncTask<Void, Integer, Void> {
 			uhe.printStackTrace();
 		}
 		catch (ClientProtocolException e) {
+			exceptionOccured = true;
 			e.printStackTrace();
 		}
 		catch (IOException e) {
+			exceptionOccured = true;
 			e.printStackTrace();
 		}
 		catch (IllegalStateException e) {
+			exceptionOccured = true;
 			e.printStackTrace();
 		}
 		return null;
@@ -92,17 +95,23 @@ class UploaderTask extends AsyncTask<Void, Integer, Void> {
 
 	@Override
 	protected void onProgressUpdate(Integer... progress) {
+		state = running;
 		ProgressBar pb = gridItem.pb;
 		if (pb != null) {
-			pb.setProgress((int) (progress[0]));
-			if (progress[0] >= 100)
+			if (progress[0] >= 100) {
 				gridItem.isUploaded = true;
+				Rect bounds = pb.getProgressDrawable().getBounds();
+				pb.setProgressDrawable(ctx.getResources().getDrawable(R.drawable.greenprogress));
+				pb.getProgressDrawable().setBounds(bounds);
+			}
+			pb.setProgress((int) (progress[0]));
 		}
 		Log.v("---", progress[0] + "...");
 	}
 
 	@Override
 	protected void onPostExecute(Void v) {
+		state = finished;
 		if (exceptionOccured)
 			Toast.makeText(ctx, R.string.alert_body_networkerror, Toast.LENGTH_LONG).show();
 	}

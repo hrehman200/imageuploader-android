@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <resources>
-    <string name="app_name">ImageUploader</string>
+    <string name="app_name">eBogholderen</string>
     <string name="title_activity_main">MainActivity</string>
     <string name="photo_archive">Billede arkiv</string>
     <string name="ok">OK</string>
@@ -39,8 +39,8 @@
     <string name="plzEnterProperEmail">Indtast venligst en korrekt e-mail</string>
     <string name="plzEnterProperTelephone">Indtast venligst en korrekt telefonnummer</string>
     <string name="plzEnterProperCVR">Indtast venligst en korrekt værdi for CVR</string>
-    <string name="plzWait">Please wait</string>
-    <string name="sendingEmail">Sending Email</string>
+    <string name="plzWait">Vent venligst</string>
+    <string name="sendingEmail">Sender kontaktoplysninger</string>
     <string name="networkError">Ingen internet forbindelse. Billedet lagres nu i en kø, så du kan sende det senere</string>
     <string name="send">Send</string>
 </resources>

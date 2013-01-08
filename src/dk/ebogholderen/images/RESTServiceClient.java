@@ -22,7 +22,8 @@ import android.content.Context;
 import android.os.Handler;
 import android.util.Log;
 
-public class RESTServiceClient {
+public class RESTServiceClient
+{
 	static final String SERVER_URL = "http://images.ebogholderen.dk/PicUploader/ImageUploader.php?devicetoken=%s&imagetype=%s";
 	static final String EMAIL_SAVE_URL = "http://images.ebogholderen.dk/PicUploader/Email.php?devicetoken=%s&email=%s&contactperson=%s&phone=%s&VATnumber=%s";
 	//
@@ -54,7 +55,7 @@ public class RESTServiceClient {
 		myprogress.setMessage(message);
 		myprogress.show();
 	}
-	
+
 	/**************************************************************************************************/
 	public void hideProgress() {
 		myprogress.hide();
@@ -64,8 +65,7 @@ public class RESTServiceClient {
 	/**
 	 * Call the server with given parameters to send email
 	 * 
-	 * @param String
-	 *            pinNumber The pin number of the employee
+	 * @param String pinNumber The pin number of the employee
 	 * 
 	 */
 	public void sendEmail(String devicetoken, String email, String contactPerson, String phone, String VATnumber) {
@@ -75,7 +75,8 @@ public class RESTServiceClient {
 	}
 
 	// //////////////////////////////////////////////////////////////////////////////////////////////////
-	class DoMakeRequest implements Runnable {
+	class DoMakeRequest implements Runnable
+	{
 		String scriptUrl;
 		List<NameValuePair> nameValuePairs;
 		Handler pHandler;
@@ -83,10 +84,8 @@ public class RESTServiceClient {
 		/**
 		 * Calls the remote method in a separate thread and passes the response to xmlHandler
 		 * 
-		 * @param methodName
-		 *            the remote method to call on server
-		 * @param nameValuePairs
-		 *            a list of parameters that the remote method accept
+		 * @param methodName the remote method to call on server
+		 * @param nameValuePairs a list of parameters that the remote method accept
 		 */
 		public DoMakeRequest(String scriptUrl, List<NameValuePair> nameValuePairs, Handler pHandler) {
 			this.scriptUrl = scriptUrl;
@@ -131,7 +130,7 @@ public class RESTServiceClient {
 						e.printStackTrace();
 					}
 					String result = stringbuilder.toString();
-					Log.v("RESPONSE", "-"+result);
+					Log.v("RESPONSE", "-" + result);
 					this.pHandler.sendMessage(Utility.createMessage(1, result));
 				}
 			}

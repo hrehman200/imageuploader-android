@@ -21,7 +21,9 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -410,7 +412,9 @@ public class Utility
 					matrix.postRotate(270);
 				break;
 			}
-			matrix.postScale(scaleWidth, scaleHeight);
+			// only scale if image is bigger than our desired size
+			if(srcBitmap.getWidth() > desiredWidth && srcBitmap.getHeight() > desiredHeight)
+				matrix.postScale(scaleWidth, scaleHeight);
 			resizedBitmap = Bitmap.createBitmap(srcBitmap, 0, 0, srcBitmap.getWidth(), srcBitmap.getHeight(), matrix, true);
 		}
 		catch (IOException e) {
@@ -434,5 +438,18 @@ public class Utility
 			e.printStackTrace();
 		}
 		return file;
+	}
+	
+	/*******************************************************************************************************/
+	public static void showDialog(Context context, String title, String message) {
+		AlertDialog.Builder alert = new AlertDialog.Builder(context);
+		alert.setTitle(title);
+		alert.setMessage(message);
+		alert.setCancelable(false);
+		alert.setNegativeButton(R.string.ok, new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {}
+		});
+		alert.show();
 	}
 }

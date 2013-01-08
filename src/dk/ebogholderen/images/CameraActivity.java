@@ -1,13 +1,12 @@
 package dk.ebogholderen.images;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.Date;
-import java.util.List;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
@@ -17,13 +16,11 @@ import android.graphics.BitmapFactory.Options;
 import android.graphics.Matrix;
 import android.graphics.PixelFormat;
 import android.hardware.Camera;
-import android.hardware.Camera.Size;
 import android.media.AudioManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceHolder.Callback;
 import android.view.SurfaceView;
@@ -32,7 +29,8 @@ import android.view.View.OnClickListener;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-public class CameraActivity extends Activity implements OnClickListener, Callback, Camera.PictureCallback, Camera.ErrorCallback {
+public class CameraActivity extends Activity implements OnClickListener, Callback, Camera.PictureCallback, Camera.ErrorCallback, Camera.ShutterCallback
+{
 	SharedPreferences sp;
 	SurfaceView cameraView;
 	SurfaceHolder surfaceHolder;
@@ -42,6 +40,8 @@ public class CameraActivity extends Activity implements OnClickListener, Callbac
 	public static File pathToSave = null;
 	boolean takingPictures = true;
 	private Uri imgUri;
+	private int userRingerMode;
+	private AudioManager audioManager;
 
 	/** Called when the activity is first created. */
 	@Override
@@ -59,6 +59,7 @@ public class CameraActivity extends Activity implements OnClickListener, Callbac
 		// app
 		// writeImageToSDCard(null, ".nomedia");
 		//
+		audioManager = (AudioManager) this.getSystemService(Context.AUDIO_SERVICE);
 	}
 
 	/******************************************************************************************************************/
@@ -86,13 +87,7 @@ public class CameraActivity extends Activity implements OnClickListener, Callbac
 	public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {}
 
 	public void surfaceCreated(final SurfaceHolder holder) {
-		Thread camThread = new Thread(new Runnable() {
-			@Override
-			public void run() {
-				startTakingPictures(holder);
-			}
-		});
-		camThread.start();
+		startTakingPictures(holder);
 	}
 
 	public void surfaceDestroyed(SurfaceHolder holder) {
@@ -121,15 +116,6 @@ public class CameraActivity extends Activity implements OnClickListener, Callbac
 				// parameters.setRotation(0);
 			}
 			parameters.setPictureFormat(PixelFormat.JPEG);
-			/*
-			 * Picture Resolution Usually larger sizes will be at 0 index
-			 */
-			List<Size> listSizes = parameters.getSupportedPictureSizes();
-			for (Size s : listSizes) {
-				Log.v("---", s.width + "x" + s.height);
-				//w = s.width;
-				//h = s.height;
-			}
 			parameters.setPictureSize(MainActivity.DESIRED_WIDTH, MainActivity.DESIRED_HEIGHT);
 			camera.setParameters(parameters);
 			camera.setErrorCallback(this);
@@ -154,7 +140,7 @@ public class CameraActivity extends Activity implements OnClickListener, Callbac
 	/******************************************************************************************************************/
 	public void onPictureTaken(byte[] data, Camera camera) {
 		Options bmpOptions = new BitmapFactory.Options();
-		//bmpOptions.inSampleSize = 2;
+		// bmpOptions.inSampleSize = 2;
 		Bitmap b = BitmapFactory.decodeByteArray(data, 0, data.length, bmpOptions);
 		Matrix matrix = new Matrix();
 		matrix.postRotate(90);
@@ -172,15 +158,22 @@ public class CameraActivity extends Activity implements OnClickListener, Callbac
 		stopTakingPictures();
 		startTakingPictures(surfaceHolder);
 	}
-
 	
+	@Override
+	public void onShutter() {
+		audioManager.setRingerMode(userRingerMode);
+	}
 
 	/******************************************************************************************************************/
 	public void onClick(View v) {
 		switch (v.getId()) {
 			case R.id.imgCamera:
-				if (camera != null)
-					camera.takePicture(null, null, null, CameraActivity.this);
+				if (camera != null) {
+					
+					userRingerMode = audioManager.getRingerMode();
+					audioManager.setRingerMode(AudioManager.RINGER_MODE_SILENT);
+					camera.takePicture(CameraActivity.this, null, null, CameraActivity.this);
+				}
 			break;
 		}
 	}
@@ -204,4 +197,6 @@ public class CameraActivity extends Activity implements OnClickListener, Callbac
 			}
 		}
 	}
+
+	
 }

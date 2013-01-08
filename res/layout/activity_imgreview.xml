@@ -23,6 +23,9 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentRight="true"
                 android:layout_alignParentTop="true"
+                android:background="@drawable/button_bg_normal"
+                android:minHeight="35dp"
+                android:minWidth="60dp"
                 android:text="@string/send"
                 android:textSize="12dp" />
 
@@ -53,7 +56,11 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignBottom="@string/incomeShownInBank"
+                android:layout_marginRight="5dp"
+                android:background="@drawable/button_bg_normal"
                 android:lines="2"
+                android:minHeight="35dp"
+                android:minWidth="80dp"
                 android:text="@string/incomeShownInBank"
                 android:textSize="12dp" />
 
@@ -63,7 +70,11 @@
                 android:layout_height="wrap_content"
                 android:layout_alignBaseline="@+id/btnIncomeInBank"
                 android:layout_alignBottom="@+id/btnIncomeInBank"
+                android:layout_marginRight="5dp"
                 android:layout_toRightOf="@+id/btnIncomeInBank"
+                android:background="@drawable/button_bg_normal"
+                android:minHeight="35dp"
+                android:minWidth="70dp"
                 android:text="@string/spendingCash"
                 android:textSize="12dp" />
 
@@ -73,7 +84,11 @@
                 android:layout_height="wrap_content"
                 android:layout_alignBaseline="@+id/btnSpendingCash"
                 android:layout_alignBottom="@+id/btnSpendingCash"
+                android:layout_marginRight="5dp"
                 android:layout_toRightOf="@+id/btnSpendingCash"
+                android:background="@drawable/button_bg_normal"
+                android:minHeight="35dp"
+                android:minWidth="70dp"
                 android:text="@string/expenseShownInBank"
                 android:textSize="12dp" />
 
@@ -83,7 +98,10 @@
                 android:layout_height="wrap_content"
                 android:layout_alignTop="@+id/btnExpenseInBank"
                 android:layout_toRightOf="@+id/btnExpenseInBank"
+                android:background="@drawable/button_bg_normal"
                 android:lines="2"
+                android:minHeight="35dp"
+                android:minWidth="70dp"
                 android:text="@string/other"
                 android:textSize="12dp" />
 

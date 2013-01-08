@@ -1,7 +1,9 @@
 package dk.ebogholderen.images;
 
 import java.util.ArrayList;
+import dk.ebogholderen.images.R.drawable;
 import android.content.Context;
+import android.graphics.Rect;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,7 +12,8 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 
-public class ImageAdapter extends BaseAdapter {
+public class ImageAdapter extends BaseAdapter
+{
 	private Context context;
 	public static ArrayList<GridItem> arrImages = new ArrayList<GridItem>();
 
@@ -37,18 +40,27 @@ public class ImageAdapter extends BaseAdapter {
 			holder = (GridItemView) itemView.getTag();
 		}
 		GridItem gridItem = arrImages.get(position);
-		//holder.imageView.setImageURI(gridItem.imgUri);
+		// holder.imageView.setImageURI(gridItem.imgUri);
 		holder.imageView.setImageBitmap(Utility.getPreview(context, gridItem.imgUri));
 		holder.imgSelect.setTag(position);
 		holder.imgDelete.setTag(position);
 		gridItem.pb = holder.progressBar;
-		if(gridItem.isUploaded)
-			gridItem.pb.setProgress(100);
-		else
+		if (gridItem.isUploaded) {
 			gridItem.pb.setProgress(0);
+			Rect bounds = gridItem.pb.getProgressDrawable().getBounds();
+			gridItem.pb.setProgressDrawable(context.getResources().getDrawable(R.drawable.greenprogress));
+			gridItem.pb.getProgressDrawable().setBounds(bounds);
+			gridItem.pb.setProgress(100);
+		}
+		else {
+			Rect bounds = gridItem.pb.getProgressDrawable().getBounds();
+			gridItem.pb.setProgressDrawable(context.getResources().getDrawable(R.drawable.redprogress));
+			gridItem.pb.getProgressDrawable().setBounds(bounds);
+			gridItem.pb.setProgress(0);
+		}
 		//
-		View parentView = (View)gridItem.pb.getParent();
-		if(gridItem.isSelected)
+		View parentView = (View) gridItem.pb.getParent();
+		if (gridItem.isSelected)
 			parentView.setBackgroundResource(R.drawable.griditem_border);
 		else
 			parentView.setBackgroundDrawable(null);

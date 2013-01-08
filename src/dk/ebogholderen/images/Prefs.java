@@ -10,7 +10,7 @@ import android.util.Log;
 public class Prefs {
 	private SharedPreferences _prefs = null;
 	private Editor _editor = null;
-	public static String DEVICE_ID = "";
+	public String DEVICE_ID = "";
 	public static final String KEY_EMAIL = "email";
 	public static final String KEY_EMAIL_REGISTERED = "emailRegistered";
 
