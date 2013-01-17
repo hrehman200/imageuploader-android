@@ -398,7 +398,10 @@ public class Utility
 			ExifInterface exif = new ExifInterface(jpgPath);
 			BitmapFactory.Options bmpOptions = new BitmapFactory.Options();
 			bmpOptions.inPurgeable = true;
+			bmpOptions.inSampleSize = 2;
 			Bitmap srcBitmap = BitmapFactory.decodeFile(jpgPath, bmpOptions);
+			if (srcBitmap == null)
+				return null;
 			// scale the bitmap
 			float scaleWidth = ((float) desiredWidth) / srcBitmap.getWidth();
 			float scaleHeight = ((float) desiredHeight) / srcBitmap.getHeight();
@@ -413,7 +416,7 @@ public class Utility
 				break;
 			}
 			// only scale if image is bigger than our desired size
-			if(srcBitmap.getWidth() > desiredWidth && srcBitmap.getHeight() > desiredHeight)
+			if (srcBitmap.getWidth() > desiredWidth && srcBitmap.getHeight() > desiredHeight)
 				matrix.postScale(scaleWidth, scaleHeight);
 			resizedBitmap = Bitmap.createBitmap(srcBitmap, 0, 0, srcBitmap.getWidth(), srcBitmap.getHeight(), matrix, true);
 		}
@@ -439,7 +442,7 @@ public class Utility
 		}
 		return file;
 	}
-	
+
 	/*******************************************************************************************************/
 	public static void showDialog(Context context, String title, String message) {
 		AlertDialog.Builder alert = new AlertDialog.Builder(context);
@@ -451,5 +454,12 @@ public class Utility
 			public void onClick(DialogInterface dialog, int which) {}
 		});
 		alert.show();
+	}
+
+	/*******************************************************************************************************/
+	public static boolean SmallerThanIdentity(Matrix m) {
+		float[] values = new float[9];
+		m.getValues(values);
+		return ((values[0] < 1.0) || (values[4] < 1.0) || (values[8] < 1.0));
 	}
 }

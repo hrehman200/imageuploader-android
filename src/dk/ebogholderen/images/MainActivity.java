@@ -3,24 +3,31 @@ package dk.ebogholderen.images;
 import java.io.File;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Date;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.ContentResolver;
-import android.content.ContentValues;
+import android.content.BroadcastReceiver;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.net.ConnectivityManager;
+import android.content.ServiceConnection;
+import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.IBinder;
+import android.os.Message;
+import android.os.Messenger;
+import android.os.Parcelable;
+import android.os.RemoteException;
 import android.provider.MediaStore.Images;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
-import android.view.WindowManager;
 import android.view.View.OnClickListener;
+import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Button;
@@ -28,7 +35,8 @@ import android.widget.FrameLayout;
 import android.widget.GridView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
+import android.widget.ProgressBar;
+import android.widget.Toast;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonDeserializationContext;
@@ -49,9 +57,11 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 	ImageAdapter imgAdapter;
 	FrameLayout rlFullImage;
 	ImageView imgFullImage, imgCloseFullImage;
-	ArrayList<UploaderTask> arrUploadTasks;
 	boolean isResuming = true;
 	NetworkReceiver netReceiver;
+	//
+	// a unique string to differentiate our broadcast intent
+	public static final String UI_TO_SERVICE_ACTION = "UIToServiceAction";
 	//
 	static final String APP_NAME = "ImageUploader";
 	static final String SAVE_PATH = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/dk.ebogholderen.images/files/";
@@ -62,13 +72,12 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 	static final String UPLOAD_LIST_FILE = "uploadlist.txt";
 	static final int DESIRED_WIDTH = 1600;
 	static final int DESIRED_HEIGHT = 1200;
-	static final String BUGSENSE_API_KEY = "3b870290";
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+		//getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 		//
 		btnCamera = (ImageButton) findViewById(R.id.imgCamera);
 		btnCamera.setOnClickListener(this);
@@ -90,9 +99,10 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 		imgCloseFullImage = (ImageView) findViewById(R.id.imgCloseFullImage);
 		imgCloseFullImage.setOnClickListener(this);
 		//
-		arrUploadTasks = new ArrayList<UploaderTask>();
+		Intent serviceIntent = new Intent(MainActivity.this, UploaderService.class);
+		startService(serviceIntent);
 		//
-		netReceiver = new NetworkReceiver(this);
+		checkQueue(true);
 	}
 
 	/********************************************************************************************************/
@@ -106,8 +116,7 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 	public void onClick(View v) {
 		switch (v.getId()) {
 			case R.id.imgCamera:
-				Intent i = new Intent(MainActivity.this, CameraActivity.class);
-				startActivityForResult(i, REVIEW_REQUEST);
+				startCamera();
 			break;
 			case R.id.btnGallery:
 				Intent j = new Intent(Intent.ACTION_PICK, Images.Media.EXTERNAL_CONTENT_URI);
@@ -121,6 +130,12 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 				hideFullImage();
 			break;
 		}
+	}
+
+	/********************************************************************************************************/
+	private void startCamera() {
+		Intent i = new Intent(MainActivity.this, CameraActivity.class);
+		startActivityForResult(i, REVIEW_REQUEST);
 	}
 
 	/********************************************************************************************************/
@@ -147,38 +162,15 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 	@Override
 	protected void onResume() {
 		super.onResume();
-		IntentFilter mNetworkStateFilter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
-		registerReceiver(netReceiver, mNetworkStateFilter);
-		if (isResuming) {
-			Gson gson = new GsonBuilder().registerTypeAdapter(Uri.class, new UriSerializer()).registerTypeAdapter(Uri.class, new UriDeserializer()).create();
-			String jsonData = Utility.deserializeData(MainActivity.SAVE_PATH, UPLOAD_LIST_FILE);
-			Type t = new TypeToken<ArrayList<GridItem>>() {}.getType();
-			ArrayList<GridItem> arr = gson.fromJson(jsonData, t);
-			if (arr != null && arr.size() > 0) {
-				ImageAdapter.arrImages = arr;
-				imgAdapter.notifyDataSetChanged();
-				for (GridItem gi : ImageAdapter.arrImages) {
-					UploaderTask task = new UploaderTask(MainActivity.this, gi);
-					// add the scheduled task to array so that later we stop/restart this task
-					if(!arrUploadTasks.contains(task))
-						arrUploadTasks.add(task);
-				}
-			}
-		}
-		enableDisableEmailBtn();
+		registerReceiver(receiverServiceMsgs, new IntentFilter(UploaderService.SERVICE_TO_UI_ACTION));
+		checkQueue(false);
 	}
 
 	/********************************************************************************************************/
 	@Override
 	protected void onPause() {
 		super.onPause();
-		try {
-			// unregisterReceiver(netReceiver);
-		}
-		catch (IllegalArgumentException e) {}
-		Gson gson = new GsonBuilder().registerTypeAdapter(Uri.class, new UriSerializer()).registerTypeAdapter(Uri.class, new UriDeserializer()).create();
-		String jsonData = gson.toJson(ImageAdapter.arrImages);
-		Utility.serializeData(MainActivity.SAVE_PATH, UPLOAD_LIST_FILE, jsonData);
+		unregisterReceiver(receiverServiceMsgs);
 	}
 
 	/********************************************************************************************************/
@@ -186,31 +178,12 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 		GridItem gridItem = new GridItem();
 		gridItem.imgUri = imgUri;
 		gridItem.category = category;
+		gridItem.tag = ImageAdapter.arrImages.size() - 1;
 		if (!ImageAdapter.arrImages.contains(gridItem)) {
 			ImageAdapter.arrImages.add(gridItem);
 			imgAdapter.notifyDataSetChanged();
-			Log.v("---", imgUri.toString());
-			UploaderTask task = new UploaderTask(MainActivity.this, gridItem);
-			// add the scheduled task to array so that later we stop/restart this task
-			arrUploadTasks.add(task);
-			// startDownload();
-		}
-	}
-
-	/********************************************************************************************************/
-	public void startDownload() {
-		for (UploaderTask task : arrUploadTasks) {
-			if (task.gridItem.isUploaded == false) {
-				try {
-					//GridItem gi = task.gridItem;
-					//task = new UploaderTask(MainActivity.this, gi);
-					if(task.state == task.ready)
-						task.execute();
-				}
-				catch (IllegalStateException e) {
-					e.printStackTrace();
-				}
-			}
+			sendBroadcastToService(UploaderService.ADD_UPLOAD, gridItem);
+			Toast.makeText(MainActivity.this, R.string.imageWillBeSentInBg, Toast.LENGTH_LONG).show();
 		}
 	}
 
@@ -232,23 +205,22 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 		emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "");
 		emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, "");
 		emailIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-		//File image = Utility.uriToFile(MainActivity.this, picUri);
-		//emailIntent.putExtra(android.content.Intent.EXTRA_STREAM, Uri.fromFile(image));
+		// File image = Utility.uriToFile(MainActivity.this, picUri);
+		// emailIntent.putExtra(android.content.Intent.EXTRA_STREAM, Uri.fromFile(image));
 		ArrayList<Uri> arrUri = new ArrayList<Uri>();
 		for (int i = 0; i < gridView.getAdapter().getCount(); i++) {
-			GridItem gi = (GridItem)gridView.getAdapter().getItem(i);
-			if(gi.isSelected) {
+			GridItem gi = (GridItem) gridView.getAdapter().getItem(i);
+			if (gi.isSelected == 1) {
 				File image = Utility.uriToFile(MainActivity.this, gi.imgUri);
-				//emailIntent.putExtra(android.content.Intent.EXTRA_STREAM, Uri.fromFile(image));
+				// emailIntent.putExtra(android.content.Intent.EXTRA_STREAM, Uri.fromFile(image));
 				arrUri.add(Uri.fromFile(image));
 			}
 		}
-		if(arrUri.size() > 1) {
+		if (arrUri.size() > 1) {
 			emailIntent.setAction(Intent.ACTION_SEND_MULTIPLE);
 			emailIntent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, arrUri);
 		}
-		else
-		if(arrUri.size() == 1) {
+		else if (arrUri.size() == 1) {
 			emailIntent.putExtra(android.content.Intent.EXTRA_STREAM, arrUri.get(0));
 		}
 		else
@@ -268,19 +240,16 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 	public void handleImgSelect(View v) {
 		selectedPosition = (Integer) v.getTag();
 		// deselectAllImagesInGrid(selectedPosition);
-		
 		GridItem gi = (GridItem) gridView.getAdapter().getItem(selectedPosition);
 		View parentView = (View) v.getParent();
-		if (!gi.isSelected) {
-			gi.isSelected = true;
-			parentView .setBackgroundResource(R.drawable.griditem_border);
+		if (gi.isSelected == 0) {
+			gi.isSelected = 1;
+			parentView.setBackgroundResource(R.drawable.griditem_border);
 			//
-			UploaderTask t = arrUploadTasks.get(selectedPosition);
-			t = new UploaderTask(MainActivity.this, t.gridItem);
-			t.execute();
+			sendBroadcastToService(UploaderService.RESTART_UPLOAD, selectedPosition);
 		}
 		else {
-			gi.isSelected = false;
+			gi.isSelected = 0;
 			parentView.setBackgroundDrawable(null);
 		}
 		enableDisableEmailBtn();
@@ -297,7 +266,7 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 		btnEmail.setEnabled(false);
 		for (int i = 0; i < gridView.getAdapter().getCount(); i++) {
 			GridItem gi = (GridItem) gridView.getItemAtPosition(i);
-			if(gi.isSelected) {
+			if (gi.isSelected == 1) {
 				btnEmail.setEnabled(true);
 				break;
 			}
@@ -327,9 +296,7 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 		alert.setMessage(R.string.confirmDeleteImg);
 		alert.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int whichButton) {
-				UploaderTask t = arrUploadTasks.get(position);
-				t.cancel(true);
-				arrUploadTasks.remove(position);
+				sendBroadcastToService(UploaderService.REMOVE_UPLOAD, position);
 				//
 				GridItem gi = ImageAdapter.arrImages.get(position);
 				File f = Utility.uriToFile(MainActivity.this, gi.imgUri);
@@ -343,9 +310,7 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 		});
 		alert.setNegativeButton(R.string.photo_archive, new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int whichButton) {
-				UploaderTask t = arrUploadTasks.get(position);
-				t.cancel(true);
-				arrUploadTasks.remove(position);
+				sendBroadcastToService(UploaderService.REMOVE_UPLOAD, position);
 				//
 				ImageAdapter.arrImages.remove(position);
 				imgAdapter.notifyDataSetChanged();
@@ -355,6 +320,78 @@ public class MainActivity extends Activity implements OnClickListener, OnItemCli
 		});
 		alert.show();
 	}
+
+	/*******************************************************************************************************/
+	private void checkQueue(boolean firstTimeCheck) {
+		if (isResuming) {
+			Gson gson = new GsonBuilder().registerTypeAdapter(Uri.class, new UriSerializer()).registerTypeAdapter(Uri.class, new UriDeserializer()).create();
+			String jsonData = Utility.deserializeData(MainActivity.SAVE_PATH, UPLOAD_LIST_FILE);
+			Type t = new TypeToken<ArrayList<GridItem>>() {}.getType();
+			ArrayList<GridItem> arr = gson.fromJson(jsonData, t);
+			if (arr != null && arr.size() > 0) {
+				ImageAdapter.arrImages = arr;
+				imgAdapter.notifyDataSetChanged();
+				for (GridItem gi : ImageAdapter.arrImages) {
+					sendBroadcastToService(UploaderService.ADD_UPLOAD, gi);
+				}
+			}
+			else {
+				if(firstTimeCheck) {
+					startCamera();
+				}
+			}
+		}
+		enableDisableEmailBtn();
+	}
+
+	/*******************************************************************************************************/
+	private void sendBroadcastToService(int what, Parcelable obj) {
+		Intent broadcast = new Intent(UI_TO_SERVICE_ACTION);
+		broadcast.putExtra("what", what);
+		broadcast.putExtra("obj", obj);
+		sendBroadcast(broadcast);
+	}
+
+	private void sendBroadcastToService(int what, int i) {
+		Intent broadcast = new Intent(UI_TO_SERVICE_ACTION);
+		broadcast.putExtra("what", what);
+		broadcast.putExtra("obj", i);
+		sendBroadcast(broadcast);
+	}
+
+	private BroadcastReceiver receiverServiceMsgs = new BroadcastReceiver() {
+		public void onReceive(Context context, Intent intent) {
+			int what = intent.getIntExtra("what", 0);
+			switch (what) {
+				case UploaderService.NETWORK_ERROR:
+					Toast.makeText(MainActivity.this, R.string.networkError, Toast.LENGTH_LONG).show();
+				break;
+				case UploaderService.OTHER_ERROR:
+					Toast.makeText(MainActivity.this, intent.getStringExtra("obj"), Toast.LENGTH_LONG).show();
+				break;
+				case UploaderService.SERVICE_STARTED:
+					checkQueue(false);
+				break;
+				case UploaderService.PROGRESS_UPDATE:
+					int tag = intent.getIntExtra("tag", 0);
+					int progress = intent.getIntExtra("progress", 0);
+					GridItem gi = imgAdapter.getItemByTag(tag);
+					if (gi != null) {
+//						ProgressBar pb = gi.pb;
+//						if (pb != null) {
+//							if (progress >= 100) {
+//								gi.isUploaded = 1;
+//								Rect bounds = pb.getProgressDrawable().getBounds();
+//								pb.setProgressDrawable(getResources().getDrawable(R.drawable.greenprogress));
+//								pb.getProgressDrawable().setBounds(bounds);
+//							}
+//							pb.setProgress((int) (progress));
+//						}
+					}
+				break;
+			}
+		}
+	};
 
 	/*******************************************************************************************************/
 	public static class UriDeserializer implements JsonDeserializer<Uri>

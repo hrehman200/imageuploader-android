@@ -2,15 +2,14 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#ffffff" >
+    android:background="@drawable/dialog_margin" >
 
     <LinearLayout
         android:id="@+id/linEmailDialog"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:padding="5dp"
-        android:background="#ffffff" >
+        android:padding="5dp" >
 
         <TextView
             android:id="@+id/txtMsg"

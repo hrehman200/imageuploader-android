@@ -11,13 +11,11 @@ import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.ImageView.ScaleType;
 import android.widget.Toast;
 
 public class ImageReviewActivity extends Activity implements OnClickListener
 {
-	ImageView imgView;
+	TouchImageView imgView;
 	Button btnSend, btnIncomeInBank, btnSpendingCash, btnExpenseInBank, btnOther;
 	Uri imgUri;
 	Drawable originalDrawable;
@@ -32,12 +30,13 @@ public class ImageReviewActivity extends Activity implements OnClickListener
 		String img = (String) getIntent().getExtras().get("img");
 		imgUri = Uri.parse(img);
 		//
-		imgView = (ImageView) findViewById(R.id.imgReview);
-		imgView.setScaleType(ScaleType.CENTER_INSIDE);
+		imgView = (TouchImageView) findViewById(R.id.imgReview);
+		//imgView.setScaleType(ScaleType.CENTER_INSIDE);
 		imageFile = Utility.uriToFile(ImageReviewActivity.this, imgUri);
 		bmp = Utility.scaleAndRotateBitmap(imageFile.getAbsolutePath(), MainActivity.DESIRED_WIDTH, MainActivity.DESIRED_HEIGHT);
-		//imgView.setImageURI(imgUri);
+		// imgView.setImageURI(imgUri);
 		imgView.setImageBitmap(bmp);
+		imgView.setMaxZoom(4f);
 		//
 		btnSend = (Button) findViewById(R.id.btnSend);
 		btnSend.setOnClickListener(this);
@@ -71,7 +70,7 @@ public class ImageReviewActivity extends Activity implements OnClickListener
 				if (imgUri.isAbsolute()) {
 					// to avoid Gallery image being shown rotated in our app.
 					imageFile = Utility.writeImageToSDCard(bmp, MainActivity.SAVE_PATH, renamed);
-					//Utility.copyFile(image, renamedFile);
+					// Utility.copyFile(image, renamedFile);
 					Intent i = new Intent();
 					i.putExtra("img", renamedFile.getAbsolutePath());
 					i.putExtra("category", v.getTag().toString());

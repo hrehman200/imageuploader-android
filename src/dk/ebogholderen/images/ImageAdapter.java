@@ -45,7 +45,7 @@ public class ImageAdapter extends BaseAdapter
 		holder.imgSelect.setTag(position);
 		holder.imgDelete.setTag(position);
 		gridItem.pb = holder.progressBar;
-		if (gridItem.isUploaded) {
+		if (gridItem.isUploaded == 1) {
 			gridItem.pb.setProgress(0);
 			Rect bounds = gridItem.pb.getProgressDrawable().getBounds();
 			gridItem.pb.setProgressDrawable(context.getResources().getDrawable(R.drawable.greenprogress));
@@ -60,7 +60,7 @@ public class ImageAdapter extends BaseAdapter
 		}
 		//
 		View parentView = (View) gridItem.pb.getParent();
-		if (gridItem.isSelected)
+		if (gridItem.isSelected == 1)
 			parentView.setBackgroundResource(R.drawable.griditem_border);
 		else
 			parentView.setBackgroundDrawable(null);
@@ -83,5 +83,13 @@ public class ImageAdapter extends BaseAdapter
 	@Override
 	public long getItemId(int position) {
 		return 0;
+	}
+	
+	public GridItem getItemByTag(int tag) {
+		for(GridItem gi : arrImages) {
+			if(gi.tag == tag)
+				return gi;
+		}
+		return null;
 	}
 }

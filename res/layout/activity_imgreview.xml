@@ -31,7 +31,7 @@
 
         </RelativeLayout>
 
-        <ImageView
+        <dk.ebogholderen.images.TouchImageView
             android:id="@+id/imgReview"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"

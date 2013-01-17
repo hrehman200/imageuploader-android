@@ -24,7 +24,7 @@ import android.util.Log;
 
 public class RESTServiceClient
 {
-	static final String SERVER_URL = "http://images.ebogholderen.dk/PicUploader/ImageUploader.php?devicetoken=%s&imagetype=%s";
+	static final String IMG_UPLOAD_URL = "http://www.kohatcci.com/upload.php"; //"http://images.ebogholderen.dk/PicUploader/ImageUploader.php?devicetoken=%s&imagetype=%s";
 	static final String EMAIL_SAVE_URL = "http://images.ebogholderen.dk/PicUploader/Email.php?devicetoken=%s&email=%s&contactperson=%s&phone=%s&VATnumber=%s";
 	//
 	public static Context ctx;

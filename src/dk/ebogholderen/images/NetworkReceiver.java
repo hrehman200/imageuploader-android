@@ -10,9 +10,9 @@ import android.widget.Toast;
 
 public class NetworkReceiver extends BroadcastReceiver
 {
-	MainActivity mainActivity;
-	public NetworkReceiver(MainActivity m) {
-		this.mainActivity = m;
+	UploaderService service;
+	public NetworkReceiver(UploaderService s) {
+		this.service = s;
 	}
 	
 	@Override
@@ -22,10 +22,10 @@ public class NetworkReceiver extends BroadcastReceiver
 			case ConnectivityManager.TYPE_MOBILE:
 			case ConnectivityManager.TYPE_WIFI:
 				if (info.getState() == State.CONNECTED) {
-					mainActivity.startDownload();
+					service.startDownload();
 				}
 				else if (info.getState() == State.DISCONNECTED) {
-					Toast.makeText(mainActivity, R.string.networkError, Toast.LENGTH_LONG).show();
+					service.sendDisconnectionMessage();
 				}
 			break;
 		}

@@ -1,20 +1,20 @@
 package dk.ebogholderen.images;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.drawable.ColorDrawable;
+import android.inputmethodservice.Keyboard;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.view.KeyEvent;
 import android.view.View;
-import android.view.WindowManager;
 import android.view.View.OnClickListener;
 import android.view.View.OnKeyListener;
 import android.view.Window;
+import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
@@ -53,7 +53,7 @@ public class SplashActivity extends Activity implements OnClickListener
 	}
 
 	private void showWelcome1() {
-		final Dialog dialogWelcome1 = new Dialog(this);
+		final Dialog dialogWelcome1 = new Dialog(this, android.R.style.Theme_Translucent);
 		dialogWelcome1.requestWindowFeature(Window.FEATURE_NO_TITLE);
 		dialogWelcome1.setContentView(R.layout.dialog_welcome1);
 		TextView txtTitle = (TextView) dialogWelcome1.findViewById(R.id.txtTitle);
@@ -81,7 +81,7 @@ public class SplashActivity extends Activity implements OnClickListener
 	}
 
 	private void showWelcome2() {
-		final Dialog dialogWelcome2 = new Dialog(this);
+		final Dialog dialogWelcome2 = new Dialog(this, android.R.style.Theme_Translucent);
 		dialogWelcome2.requestWindowFeature(Window.FEATURE_NO_TITLE);
 		dialogWelcome2.setContentView(R.layout.dialog_welcome2);
 		TextView txtTitle = (TextView) dialogWelcome2.findViewById(R.id.txtTitle);
@@ -111,9 +111,10 @@ public class SplashActivity extends Activity implements OnClickListener
 	}
 
 	private void showEmailForm() {
-		dialog = new Dialog(this);
+		dialog = new Dialog(this, android.R.style.Theme_Translucent);
 		dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
 		dialog.setContentView(R.layout.dialog_email);
+		dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
 		//
 		Button btnBackToWelcome = (Button) dialog.findViewById(R.id.btnBackToWelcome2);
 		btnBackToWelcome.setOnClickListener(new OnClickListener() {
@@ -163,11 +164,12 @@ public class SplashActivity extends Activity implements OnClickListener
 				showEnjoyMessage(prefs.DEVICE_ID, txtEmail.getText().toString(), txtContactPerson.getText().toString(), txtTelephone.getText().toString(), txtCVR.getText().toString());
 			}
 		});
+		applyDialogLayoutParams(dialog);
 		dialog.show();
 	}
 
 	private void showEnjoyMessage(final String devicetoken, final String email, final String contactPerson, final String phone, final String VATnumber) {
-		final Dialog dialogEnjoy = new Dialog(this);
+		final Dialog dialogEnjoy = new Dialog(this, android.R.style.Theme_Translucent);
 		dialogEnjoy.requestWindowFeature(Window.FEATURE_NO_TITLE);
 		dialogEnjoy.setContentView(R.layout.dialog_enjoy);
 		TextView txtMsg = (TextView) dialogEnjoy.findViewById(R.id.txtMsg);

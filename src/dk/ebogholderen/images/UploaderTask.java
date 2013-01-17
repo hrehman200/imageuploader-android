@@ -2,6 +2,7 @@ package dk.ebogholderen.images;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.SocketTimeoutException;
 import java.net.URLEncoder;
 import java.net.UnknownHostException;
 import org.apache.http.HttpResponse;
@@ -10,6 +11,9 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
@@ -19,23 +23,24 @@ import android.graphics.Rect;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.ProgressBar;
-import android.widget.Toast;
 import dk.ebogholderen.images.CustomMultipartEntity.ProgressListener;
 
 class UploaderTask extends AsyncTask<Void, Integer, Void>
 {
 	ProgressDialog pd;
 	long totalSize;
+	UploaderService service;
 	Context ctx;
 	GridItem gridItem;
-	boolean exceptionOccured;
+	String exception;
 	byte ready = 1, running = 2, finished = 3;
 	byte state = ready;
 	Prefs prefs;
 
-	public UploaderTask(Context ctx, GridItem gridItem) {
-		this.ctx = ctx;
+	public UploaderTask(UploaderService service, GridItem gridItem) {
+		this.service = service;
 		this.gridItem = gridItem;
+		this.ctx = service.getApplicationContext();
 		prefs = new Prefs(ctx);
 	}
 
@@ -46,16 +51,19 @@ class UploaderTask extends AsyncTask<Void, Integer, Void>
 
 	@Override
 	protected Void doInBackground(Void... params) {
-		final HttpClient httpClient = new DefaultHttpClient();
+		HttpParams httpParams = new BasicHttpParams();
+		HttpConnectionParams.setConnectionTimeout(httpParams, 120000);
+		HttpConnectionParams.setSoTimeout(httpParams, 120000);
+		final HttpClient httpClient = new DefaultHttpClient(httpParams);
 		HttpContext httpContext = new BasicHttpContext();
-		String url = String.format(RESTServiceClient.SERVER_URL, prefs.DEVICE_ID, URLEncoder.encode(gridItem.category));
+		String url = String.format(RESTServiceClient.IMG_UPLOAD_URL, prefs.DEVICE_ID, URLEncoder.encode(gridItem.category));
 		Log.v("url", url);
 		final HttpPost httpPost = new HttpPost(url);
 		try {
 			CustomMultipartEntity multipartContent = new CustomMultipartEntity(new ProgressListener() {
 				@Override
 				public void transferred(long num) {
-					if (isCancelled() || gridItem.isUploaded) {
+					if (isCancelled()) {
 						httpPost.abort();
 						return;
 					}
@@ -71,23 +79,29 @@ class UploaderTask extends AsyncTask<Void, Integer, Void>
 			httpPost.setEntity(multipartContent);
 			HttpResponse response = httpClient.execute(httpPost, httpContext);
 			String serverResponse = EntityUtils.toString(response.getEntity());
+			Log.v("upload response", serverResponse);
 			// ResponseFactory rp = new HttpResp(serverResponse);
 			// return (TypeImage) rp.getData();
 		}
-		catch (UnknownHostException uhe) {
-			exceptionOccured = true;
-			uhe.printStackTrace();
+		catch(SocketTimeoutException e) {
+			exception = e.getMessage();
+			e.printStackTrace();
+		}
+		catch (UnknownHostException e) {
+			exception = e.getMessage();
+			e.printStackTrace();
+			httpPost.abort();
 		}
 		catch (ClientProtocolException e) {
-			exceptionOccured = true;
+			exception = e.getMessage();
 			e.printStackTrace();
 		}
 		catch (IOException e) {
-			exceptionOccured = true;
+			exception = e.getMessage();
 			e.printStackTrace();
 		}
 		catch (IllegalStateException e) {
-			exceptionOccured = true;
+			//exception = e.getMessage();
 			e.printStackTrace();
 		}
 		return null;
@@ -96,23 +110,19 @@ class UploaderTask extends AsyncTask<Void, Integer, Void>
 	@Override
 	protected void onProgressUpdate(Integer... progress) {
 		state = running;
-		ProgressBar pb = gridItem.pb;
-		if (pb != null) {
-			if (progress[0] >= 100) {
-				gridItem.isUploaded = true;
-				Rect bounds = pb.getProgressDrawable().getBounds();
-				pb.setProgressDrawable(ctx.getResources().getDrawable(R.drawable.greenprogress));
-				pb.getProgressDrawable().setBounds(bounds);
-			}
-			pb.setProgress((int) (progress[0]));
+		if(progress[0] >= 100) {
+			//gridItem.isUploaded = 1;
+			state = finished;
 		}
+		service.sendProgressMessage(gridItem.tag, progress[0]);
 		Log.v("---", progress[0] + "...");
 	}
 
 	@Override
 	protected void onPostExecute(Void v) {
-		state = finished;
-		if (exceptionOccured)
-			Toast.makeText(ctx, R.string.alert_body_networkerror, Toast.LENGTH_LONG).show();
+		if (exception != null && !exception.equalsIgnoreCase("")) {
+			service.sendOtherMessage(exception);
+		}
+		service.startDownload();
 	}
 }
